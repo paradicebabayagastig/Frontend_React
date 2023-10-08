@@ -7,7 +7,9 @@ import Stock from "../stock";
 import { Navigate, redirect, useNavigate } from "react-router-dom";
 import { tokens } from "../../theme";
 import { Box, Paper, Typography, Button,useTheme } from '@mui/material';
-import  BarChart  from '../../components/barChart'
+import  BarChart  from '../../components/barChart2'
+import {XYPlot, LineSeries,VerticalGridLines,HorizontalGridLines,XAxis,YAxis} from 'react-vis';
+
 
 const Home = () => 
 
@@ -22,6 +24,18 @@ const Home = () =>
     role = role.replace(/_/g, ' ');
     const [stock,setStock] = useState([]);
     const [commande,setCommande] = useState([]);
+    const data = [
+      {x: 0, y: 8},
+      {x: 1, y: 5},
+      {x: 2, y: 4},
+      {x: 3, y: 9},
+      {x: 4, y: 1},
+      {x: 5, y: 7},
+      {x: 6, y: 6},
+      {x: 7, y: 3},
+      {x: 8, y: 2},
+      {x: 9, y: 0}
+    ];
     const checkStock = async ()=>{
       try{
         const response = await axios.get('http://localhost:3000/api/v1/stocks', {
@@ -136,11 +150,9 @@ const Home = () =>
         </Paper>
         </Box>
       }
-      <Box sx={{
-        width:"100%",
-        display:"flex"
-      }}>
-        <BarChart/>
+      
+      <Box height="75vh">
+        <BarChart />
       </Box>
     </>
 
