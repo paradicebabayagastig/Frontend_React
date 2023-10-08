@@ -24,6 +24,7 @@ const AddCommande = () => {
          const [bonsCommandes,setBonCommandes] = useState([])
          const [dateLiv,setDateLiv] = useState('')
          const [open, setOpen] = useState(false);
+         const [pdv,setPdv] = useState([]);
          const handleOpen = () => setOpen(true);
          const handleClose = () => setOpen(false);
          const handleCreateLivraison = (async () => {
@@ -53,6 +54,16 @@ const AddCommande = () => {
             borderRadius:'30px',
             p: 4,
           };
+
+          const getPdv = async () => {
+            try{
+              const response = await axios.get(`http://localhost:3000/api/v1/pointsVentes/${authCtx.id}`)
+              setPdv(response.data)
+            }catch(err){
+
+            }
+          }
+
           const handleChange = (event) => {
             const date = event.target.value;
             const originalDate = new Date(date);
@@ -171,7 +182,9 @@ const AddCommande = () => {
             fetchData();
             getBonCommandeByCommandeId();
           }, [idCommande, token]);
-
+          useEffect(()=>{
+            getPdv();
+          },[])
           useEffect(() => {
             console.log("testMAhboul:",bonsCommandes)
           },[bonsCommandes])
@@ -360,7 +373,7 @@ const AddCommande = () => {
         }} 
         aria-label="add" 
         onClick={handleOpen} 
-        disabled={bonsCommandes.length === 2}
+        disabled={bonsCommandes.length === 2 && pdv.allowSuite==true}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

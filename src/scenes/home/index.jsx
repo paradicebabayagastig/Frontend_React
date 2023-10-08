@@ -7,6 +7,8 @@ import Stock from "../stock";
 import { Navigate, redirect, useNavigate } from "react-router-dom";
 import { tokens } from "../../theme";
 import { Box, Paper, Typography, Button,useTheme } from '@mui/material';
+import  BarChart  from '../../components/barChart'
+
 const Home = () => 
 
 {   
@@ -90,7 +92,6 @@ const Home = () =>
       const handleCreateCommande =()=>{
         navigate('/commande');
       };
-
       return(
       <>
         <Box m="50px" >
@@ -135,15 +136,17 @@ const Home = () =>
         </Paper>
         </Box>
       }
+      <Box sx={{
+        width:"100%",
+        display:"flex"
+      }}>
+        <BarChart/>
+      </Box>
     </>
 
     );
     
     
 }
-
-
-
-
 
 export default Home;

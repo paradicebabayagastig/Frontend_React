@@ -1,4 +1,4 @@
-import { Alert, Box, Chip, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Alert, Box, Chip, CircularProgress, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -16,9 +16,12 @@ const FabricationInfo = () => {
       const bonfabricationId = parseInt(params.id);
         const authCtx = useContext(AuthContext)
         const token = authCtx.isAuthenticated;
+        const role = authCtx.role
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
         const [data,setData] = useState([]);
+        const [fournitureData,setFournitureData] = useState([]);
+        const [kgData,setKgData] = useState([])
         // const [products,setProducts] = useState([])
         const [loading, setLoading] = useState(false);
         const [success, setSuccess] = useState(false);
@@ -27,10 +30,10 @@ const FabricationInfo = () => {
         const navigate = useNavigate();
 
         const message = ("Information bon fabrication n°"+ bonfabricationId )
-        async function fetchData() {
+        async function fetchFabricationOrders() {
           try {
-            const Cresponse = await axios.get(
-              `http://localhost:3000/api/v1/commandes/fabrication/${bonfabricationId}`,
+            const fabricationOrders = await axios.get(
+              `http://localhost:3000/api/v1/fabItem/fabrication/${bonfabricationId}`,
               {
                 withCredentials: true,
                 headers: {
@@ -40,122 +43,69 @@ const FabricationInfo = () => {
               }
             );
         
-            const allQuantities = await Promise.all(
-              Cresponse.data.map(async (Commande) => {
-                const bonCommandeResponse = await axios.get(
-                  `http://localhost:3000/api/v1/bons-commandes/commande/${Commande.idCommande}`,
-                  {
-                    withCredentials: true,
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    }
-                  }
-                );
+            console.log('test:', fabricationOrders.data);
         
-                const quantities = await Promise.all(
-                  bonCommandeResponse.data.map(async (bonCommande) => {
-                    const orderItemsResponse = await axios.get(
-                      `http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`,
-                      {
-                        withCredentials: true,
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`
-                        }
-                      }
-                    );
+            const categorizedOrders = {};
         
-                    const orderItemData = await Promise.all(
-                      orderItemsResponse.data.map(async (orderItem) => {
-                        // Fetch the produit details using idProduit
-                        const produitResponse = await axios.get(
-                          `http://localhost:3000/api/v1/produits/${orderItem.produitId}`,
-                          {
-                            withCredentials: true,
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${token}`
-                            }
-                          }
-                        );
+            for (const fabOrder of fabricationOrders.data) {
+              const type = fabOrder.type;
+              const produitId = fabOrder.produitId;
         
-                        return {
-                          orderItemId: orderItem.idOrderItem,
-                          produit: produitResponse.data.nomProduit, // Add nomProduit
-                          class: produitResponse.data.class,
-                          quantity: orderItem.quantity,
-                          suite: orderItem.suiteCommande,
-                          unite: orderItem.unite
-                        };
-                      })
-                    );
+              // Fetch product details
+              const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${produitId}`, {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              });
         
-                    return orderItemData;
-                  })
-                );
+              const orderDetails = {
+                index: fabricationOrders.data.indexOf(fabOrder) + 1,
+                produit: produitResponse.data.nomProduit,
+                totalBac: fabOrder.totalBac,
+                totalSuite: fabOrder.totalSuite,
+                pztPlaza: fabOrder.PztPlaza,
+                pztAzur: fabOrder.PztAzur,
+                pztSuitz: fabOrder.PztSuite,
+                type: fabOrder.type,
+                class: produitResponse.data.class
+              };
         
-                // Flatten the nested arrays for this Commande
-                const flattenedQuantities = quantities.flat();
-        
-                return flattenedQuantities;
-              })
-            );
-        
-            // Flatten the nested arrays for all Commandes
-            const allQuantitiesFlat = allQuantities.flat();
-        
-            // Group and aggregate quantities by product and unite
-            const aggregatedQuantities = allQuantitiesFlat.reduce((result, current) => {
-              const key = `${current.produit}-${current.unite}`;
-              if (!result[key]) {
-                result[key] = {
-                  produit: current.produit,
-                  class: current.class,
-                  unite: current.unite,
-                  totalQuantity: 0,
-                  totalSuiteC:0,
-                };
+              // Add the order details to the appropriate category
+              if (!categorizedOrders[type]) {
+                categorizedOrders[type] = [];
               }
-              result[key].totalQuantity += current.quantity;
-              result[key].totalSuiteC += current.suite;
-              return result;
-            }, {});
+              categorizedOrders[type].push(orderDetails);
+            }
         
-            // Convert the aggregated quantities into an array
-            const aggregatedQuantitiesArray = Object.values(aggregatedQuantities);
+            // Now 'categorizedOrders' contains separate arrays for each type
+            console.log('TEST SUITE', categorizedOrders.SUITE);
+            console.log('TEST FOURNITURE', categorizedOrders.FOURNITURE);
+            console.log('TEST KILO', categorizedOrders.KG);
 
-            // Add an index to each aggregated item
-            const aggregatedQuantitiesWithIndex = aggregatedQuantitiesArray.map((item, index) => ({
-              index: index+1, // Set the index as the key
-              produit: item.produit,
-              class: item.class,
-              unite: item.unite,
-              totalQuantity: item.totalQuantity,
-              totalSuiteC: item.totalSuiteC,
-            }));
         
-            console.log("aggregated quantities:", aggregatedQuantitiesWithIndex);
-        
-            setData(aggregatedQuantitiesWithIndex);
-          } catch (err) {
-            console.log(err);
+            // You can set the data in your state based on the categories you need
+            setData(categorizedOrders.SUITE); // Example: Set 'SUITE' category data to your state
+            setFournitureData(categorizedOrders.FOURNITURE);
+            setKgData(categorizedOrders.KG)
+          } catch (error) {
+            console.log(error);
           }
         }
+        
+        
         
           
         
   useEffect(()=>{
     
-    fetchData()
+    // fetchData()
+    fetchFabricationOrders()
   },[])
 
 
-  useEffect(() => {
-    console.log("data changed! :",data);
-  
-  }, [data]);
-
+ 
   
 
 //   const handleChange = (productId) => (event) =>{
@@ -207,48 +157,85 @@ const FabricationInfo = () => {
 //     }
 //   };
   
-
-  const columns = [
+  const kiloColumns = [
     {
       id:1,
-      field: "index",
-      headerName: "id",
-      flex: 0.5,
-      
+      field: "produit",
+      headerName: <b>PRODUIT</b>,
+      flex: 0.125,
     },
     {
       id:2,
-      field: "produit",
-      headerName: "produit",
-      flex: 1,
+      field: "class",
+      headerName: <b>CLASS</b>,
+      flex: 0.125,
+      
     },
     {
       id:3,
-      field: "totalQuantity",
-      headerName: "total Quantity",
-      flex: 1,
+      field: "totalBac",
+      headerName: <b>QTE</b>,
+      flex: 0.125,
+      
+    },
+    
+
+  ]
+  const fournitureColumns = [
+    {
+      id:1,
+      field: "produit",
+      headerName: <b>AUTRE BESOINS</b>,
+      flex: 0.125,
+    },
+    {
+      id:2,
+      field: "totalBac",
+      headerName: <b>QTE</b>,
+      flex: 0.125,
+      
+    }
+  ]
+  const columns = [
+    {
+      id:1,
+      field: "produit",
+      headerName: <b>PRODUIT</b>,
+      flex: 0.25,
+    },
+    {
+      id:2,
+      field: "totalBac",
+      headerName: <b>TOTAL BACS</b>,
+      flex: 0.25,
       cellClassName:"quantity-column--cell"
      
     },
     {
+      id:3,
+      field: "totalSuite",
+      headerName: <b>SUITE COMMANDE</b>,
+      flex: 0.25,
+
+    },
+    {
       id:4,
-      field: "totalSuiteC",
-      headerName: "total Suite",
-      flex: 1,
+      field: "pztPlaza",
+      headerName: <b>POZZETI PLAZA</b>,
+      flex: 0.25,
 
     },
     {
       id:5,
-      field: "class",
-      headerName: "class",
-      flex: 0.5,
-
+      field:"pztAzur",
+      headerName:<b>POZZETI AZUR</b>,
+      flex:0.25,
     },
     {
       id:6,
-      field:"unite",
-      headerName:"Unité",
-      flex:1,
+      field:"pztSuitz",
+      headerName:<b>POZZETI SUITE</b>,
+      flex:0.25,
     }
     ];
   return (
@@ -286,11 +273,12 @@ const FabricationInfo = () => {
 
         
       </Box>
-      
+    
       <Box
         m="40px 0 0 0"
         height="75vh"
         sx={{
+          display:"flex",
           "& .MuiDataGrid-root": {
             borderColor: colors.primary[400],
           },
@@ -317,15 +305,45 @@ const FabricationInfo = () => {
           "& .MuiCheckbox-root": {
             color: `${colors.pinkAccent[200]} !important`,
           },
+          '& .MuiDataGrid-virtualScroller::-webkit-scrollbar': {display: 'none' }
         }}
       >
         <DataGrid
-        checkboxSelection
         rows={data}
         columns={columns}
         getRowId={(row)=>row.index}
-        components={{ Toolbar: GridToolbar }}
+        // components={{ Toolbar: GridToolbar }}
+        hideScrollbarX // Hide horizontal scroll bar
+        hideScrollbarY // Hide vertical scroll bar
+        sx={{
+          flex: 2.75
+        }}
         />
+         <DataGrid
+        rows={kgData}
+        columns={kiloColumns}
+        getRowId={(row)=>row.index}
+        hideScrollbarX // Hide horizontal scroll bar
+        hideScrollbarY // Hide vertical scroll bar
+        sx={{
+          flex: 2
+        }}
+        />
+        {
+          (role === 'RESPONSABLE_LOGISTIQUE') && (
+            <DataGrid
+        rows={fournitureData}
+        columns={fournitureColumns}
+        getRowId={(row)=>row.index}
+        hideScrollbarX = {true} // Hide horizontal scroll bar
+        hideScrollbarY // Hide vertical scroll bar
+        sx={{
+          flex: 1.75
+        }}
+        />
+          )
+        }
+          
       </Box>
       <Snackbar open={success} autoHideDuration={2000}>
         <Alert sx={{

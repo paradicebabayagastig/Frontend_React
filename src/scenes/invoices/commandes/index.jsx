@@ -68,6 +68,7 @@ const CommandeInfo = () => {
                           orderItemId: orderItem.idOrderItem,
                           produit: produitResponse.data.nomProduit, // Add nomProduit
                           class: produitResponse.data.class,
+                          type:produitResponse.data.type,
                           quantity: orderItem.quantity,
                           suite: orderItem.suiteCommande,
                           unite: orderItem.unite
@@ -91,6 +92,7 @@ const CommandeInfo = () => {
                 result[key] = {
                   produit: current.produit,
                   class: current.class,
+                  type: current.type,
                   unite: current.unite,
                   quantity: 0,
                   suiteC:0,
@@ -109,6 +111,7 @@ const CommandeInfo = () => {
               index: index+1, // Set the index as the key
               produit: item.produit,
               class: item.class,
+              type: item.type,
               unite: item.unite,
               quantity: item.quantity,
               suiteC: item.suiteC,
@@ -227,8 +230,8 @@ const CommandeInfo = () => {
     },
     {
       id:6,
-      field:"unite",
-      headerName:"Unité",
+      field:"type",
+      headerName:"TYPE",
       flex:1,
     }
     ];

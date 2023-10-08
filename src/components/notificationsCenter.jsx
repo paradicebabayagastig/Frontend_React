@@ -45,7 +45,7 @@ const NotificationsCenter = ()=> {
     getData();
   },[])
   
-  const handleSwipe = async(id)=>{
+  const handleSwipe = async(id)=>{   
     const i =parseInt(id);
     const response = await axios.patch(`http://localhost:3000/api/v1/notifications/${i}`,{
       seen:true

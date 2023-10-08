@@ -57,9 +57,9 @@ const Invoices = () => {
   const columns = [
     {
       id:1,
-      field: "idCommande",
-      headerName: "N° Bon Livraison",
-      flex: 0.25,
+      field: "reference",
+      headerName: "reference",
+      flex: 0.5,
       cellClassName: "name-column--cell",
       
     },
@@ -75,7 +75,7 @@ const Invoices = () => {
       id:3,
       field: "dateCommande",
       headerName: "Date Commande",
-      flex: 0.5,
+      flex: 0.25,
     },
     {
       id:4,
@@ -236,6 +236,7 @@ const Invoices = () => {
         // Create the object with the required properties
         const orderWithDetails = {
           idCommande: commande.idCommande,
+          reference: commande.refBL,
           dateCommande,
           dateLivraison,
           point: userResponse.data.nomUtilisateur,

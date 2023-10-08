@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Container, Typography, Card, CardContent, Box } from '@mui/material';
+import { TextField, Button, Container, Typography, Card, CardContent, Box, Chip } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@emotion/react';
 import { tokens } from '../../../theme';
@@ -22,7 +22,7 @@ const OrderItemForm = (props) => {
   },[data])
 
   const cardStyle = {
-    backgroundColor:colors.primary[400],
+    backgroundColor:colors.primary[500],
     borderRadius: '10px',
     border: `1px solid ${colors.grey[300]}`,
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
@@ -32,7 +32,7 @@ const OrderItemForm = (props) => {
   };
 
   const titleStyle = {
-    color: colors.pinkAccent[300], // Using your blue accent color
+    color: colors.primary[100], // Using your blue accent color
     marginBottom: '16px',
   };
 
@@ -46,25 +46,26 @@ const OrderItemForm = (props) => {
   };
 
   const modifyButtonStyle = {
-    display:"flex",
-    gap:5,
+    // display:"flex",
+    // gap:5,
     marginTop: '16px',
-    marginLeft: '170px',
+    marginRight: 15,
+    float: 'right'
   };
 
   return (
     <Container>
       <Card style={cardStyle}>
         <CardContent>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={4} alignContent='center'>
           <Typography variant="h5" style={titleStyle}>
             Bon Commande n°{props.index+1}
           </Typography>
           {
             (props.type === "SUITE") && (
-              <Typography variant="h6" style={subTitleStyle}>
-           Suite Commande
-          </Typography>
+              <Chip label="SUITE" sx={{
+                background:colors.pinkAccent[400],
+              }}/>
             )
           }  
           </Box>
@@ -81,16 +82,34 @@ const OrderItemForm = (props) => {
           />
         </CardContent>
         <div style={modifyButtonStyle}>
-          <Link to={`/bonCommande/${props.id}`} style={{ textDecoration: 'none' }}>
-            <Button variant="contained" style={{ backgroundColor: colors.pinkAccent[400], color: colors.primary[400] }}>
-              Modifier
-            </Button>
-          </Link>
-          <Link to={`/bonCommande/info/${props.id}`} style={{ textDecoration: 'none' }}>
-            <Button variant="contained" style={{ backgroundColor: colors.primary[400], color: colors.primary[100] }}>
+          {
+            (props.checked? <Link to={`/bonCommande/info/${props.id}`} style={{ textDecoration: 'none' }}>
+            <Button variant="contained" sx={{ 
+              background: colors.primary[400], 
+              color: colors.primary[100],
+              '&:hover':{
+                background: colors.pinkAccent[400], 
+                color: colors.primary[100],
+
+              }
+              }}>
               Voir Plus
             </Button>
-          </Link>
+          </Link> :  <Link to={`/bonCommande/${props.id}`} style={{ textDecoration: 'none' }}>
+            <Button variant="contained" sx={{ 
+              background: colors.primary[400],
+              color: colors.primary[100],
+              '&:hover':{
+                background: colors.pinkAccent[400], 
+                color: colors.primary[100],
+
+              } }}>
+              Modifier
+            </Button>
+          </Link>)
+          }
+          
+          
         </div>
       </Card>
     </Container>)

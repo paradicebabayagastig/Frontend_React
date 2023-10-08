@@ -58,7 +58,8 @@ const LivraisonInfo = () => {
               class:produitResponse.data.class,
               quantity: orderItem.quantity,
               suiteCommande:orderItem.suiteCommande,
-              livraison:orderItem.livraison,
+              ecart:orderItem.ecart,
+              QteLivre:orderItem.QteLivre,
               feedback:orderItem.feedback,
               unite: orderItem.unite
               };
@@ -209,9 +210,16 @@ const LivraisonInfo = () => {
 
     },
     {
+      id:8,
+      field: "ecart",
+      headerName: "ecart",
+      flex: 1,
+
+    },
+    {
       id:5,
-      field:"livraison",
-      headerName:"Livraison",
+      field:"QteLivre",
+      headerName:"QteLivre",
       flex:1,
     }, 
     {
@@ -228,13 +236,7 @@ const LivraisonInfo = () => {
       flex: 1,
 
     },
-    {
-      id:8,
-      field: "unite",
-      headerName: "Unité",
-      flex: 1,
-
-    },
+   
     ];
   
   return (

@@ -1,5 +1,5 @@
 import { Box, Button, Grid,TextField,Typography,useTheme } from "@mui/material";
-import { Formik } from "formik";
+import { Formik,useFormikContext } from "formik";
 import { useContext, useEffect, useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
@@ -27,15 +27,15 @@ const Form = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [showErr,setShowErr]=useState(false);
-    const [chefs,setLestChefs]=useState([])
+    const [isFormSubmitted, setIsFormSubmitted] = useState(false);
     //const isNonMobile = useMediaQuery("(min-width:600px)");
-   
+   const formikContext=useFormikContext();
     //const handleChangeRole = (event:React.ChangeEvent<HTMLInputElement>) =>{
 
     //}
     //const navigate = useNavigate();
   
-    const handleFormSubmit = (values) => {
+    const handleFormSubmit = (values,action) => {
       
       
       axios.post('http://localhost:3000/api/v1/auth/register',{
@@ -48,52 +48,22 @@ const Form = () => {
       .then((response)=> {
         setShowErr(false)
         console.log(response)
-        
+        setIsFormSubmitted(true); // Form is submitted
+        setTimeout(() => {
+          setIsFormSubmitted(false); // Reset the form after a while
+          action.resetForm();
+        }, 3000);
       })
       .catch((err)=> {
         console.log(err)
         setShowErr(true)
+       
       })
     };
     const [showPassword, setShowPassword] = useState(false);
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     
-    useEffect(() => {
-      async function getChefs() {
-        try {
-          const response = await axios.get("http://localhost:3000/api/v1/users", {
-            withCredentials: true,
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-    
-          const updatedChefs = await Promise.all(response.data.map(async (user) => {
-            if (user.role === "CHEF_GLACIER") {
-              const chef = {
-                id: user.idUtilisateur,
-                nom: user.nomUtilisateur,
-              };
-              return chef;
-            }
-            else {
-              return null;
-            }
-           
-          }));
-          const filteredChefs = updatedChefs.filter(chef => chef !== null);
-          setLestChefs(filteredChefs);
-          console.log("chefs :",chefs)
-        } catch (err) {
-          console.log(err);
-        }
-      }
-  
-      getChefs()
-    },[])
-   
     return (
         <Grid
          container
@@ -120,7 +90,7 @@ const Form = () => {
                          
                               <ErrorIcon sx={{marginRight:'10px'}} />
                            
-                        <Typography >Error incorrect information</Typography>
+                        <Typography >User already exists</Typography>
             </Box> :null}
           
     
@@ -230,26 +200,22 @@ const Form = () => {
                     </TextField>
       
                 </FormControl > 
-                {
-                  values.role === "POINT_DE_VENTE"  && <FormControl  sx={{ mt: 2, }} variant="filled">
-                    <InputLabel>{values.chef ? "" :"chef"}</InputLabel>
-                     <TextField select id="filled-adornment-role" name="chef" value={values.chef} onChange={handleChange}  onBlur={handleBlur}>
-                      {chefs.map((chef)=>(
-                        <MenuItem key={chef.id} value={chef.id}>{chef.nom}</MenuItem>
-                      )    
-                      )}
-                    </TextField>
-                  </FormControl>
-                }
                                
                 </Box>
                
                 <Box display="flex" justifyContent="left" mt="30px">
-                  <Button type="submit" sx={{
-                    background:colors.pinkAccent[300]
-                  }} variant="contained" size="large">
-                    Create Account
-                  </Button>
+                <Button
+                  type="submit"
+                  sx={{
+                    background: colors.pinkAccent[300],
+                  }}
+                  variant="contained"
+                  size="large"
+                  disabled={isFormSubmitted} // Step 3: Disable the form if submitted
+                >
+                  Create Account
+                </Button>
+
                 </Box>
               </form>
             )}

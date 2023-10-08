@@ -14,29 +14,38 @@ export const AuthContext = createContext({
 });
 
 const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState("");
-  //const [accessToken,setAccessToken] = useState(false)
-  const [email,setEmail] = useState("")
-  const [name,setName] = useState("")
-  const [role,setRole] = useState("")
-  const [id,setId] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("accessToken") || "");
+  const [email, setEmail] = useState(localStorage.getItem("email") || "");
+  const [name, setName] = useState(localStorage.getItem("name") || "");
+  const [role, setRole] = useState(localStorage.getItem("role") || "");
+  const [id, setId] = useState(localStorage.getItem("id") || 0);
 
   const loginHandler = (data) => {
-    setIsAuthenticated(data.accessToken)
-    setEmail(data.email)
-    setName(data.name)
-    setRole(data.role)
-    setId(data.id)
-    //setAccessToken(true)
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("email", data.email);
+    localStorage.setItem("name", data.name);
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("id", data.id);
+
+    setIsAuthenticated(data.accessToken);
+    setEmail(data.email);
+    setName(data.name);
+    setRole(data.role);
+    setId(data.id);
   };
 
   const logoutHandler = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("email");
+    localStorage.removeItem("name");
+    localStorage.removeItem("role");
+    localStorage.removeItem("id");
+
     setIsAuthenticated("");
-    setEmail("")
-    setName("")
-    setRole("")
-    setId(0)
-    //setAccessToken(false)
+    setEmail("");
+    setName("");
+    setRole("");
+    setId(0);
   };
  
 

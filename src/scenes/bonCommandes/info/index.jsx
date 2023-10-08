@@ -1,4 +1,4 @@
-import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Alert, Box, Chip, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -19,6 +19,7 @@ const Bcinfo = () => {
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
         const [data,setData] = useState([]);
+        const [currentBonCommande, setCurrentBonCommande] = useState({})
         // const [products,setProducts] = useState([])
         const [loading, setLoading] = useState(false);
         const [success, setSuccess] = useState(false);
@@ -26,7 +27,42 @@ const Bcinfo = () => {
         const [allgood,setAllgood] = useState(true)
         const navigate = useNavigate();
 
+        const classColors = {
+          NORMAL: '#64CCC5', // Replace 'blue' with your desired color
+          GRANITE: 'green', // Replace 'green' with your desired color
+          ICE_POPS: 'orange', // Replace 'orange' with your desired color
+          HAPPY_POPS: 'pink', // Replace 'pink' with your desired color
+          DOMES: 'purple', // Replace 'purple' with your desired color
+          AUTRES: 'red', // Replace 'red' with your desired color
+          BUCHE_MAXI: 'teal', // Replace 'teal' with your desired color
+          BUCHE_MINI: 'indigo', // Replace 'indigo' with your desired color
+          CHOCOLAT: 'brown', // Replace 'brown' with your desired color
+        };
+        
+        const typeColors = {
+          PARFUM: '#FFD8E4', // Replace 'blue' with your desired color
+          FOURNITURE: 'gold', // Replace 'green' with your desired color
+        };
+
         const message = ("Information bon commande n° "+ bonCommandeId )
+
+        async function fetchBonCommande() {
+          try {
+            const bonCommandeResponse = await axios.get(`http://localhost:3000/api/v1/bons-commandes/${bonCommandeId}`,{
+              withCredentials: true,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }) 
+            console.log('ahawa : ', bonCommandeResponse.data)
+            setCurrentBonCommande(bonCommandeResponse.data)
+          }
+          catch (error) {
+            console.log(error)
+          }
+        }
+
         async function fetchData() {
           try {
             const response = await axios.get(`http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommandeId}`, {
@@ -38,7 +74,7 @@ const Bcinfo = () => {
             });
           
       
-            const initialQuantities = await Promise.all(response.data.map( async (orderItem) => {
+            const initialQuantities = await Promise.all(response.data.map( async (orderItem,index) => {
                 const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${orderItem.produitId}`,{
                     withCredentials: true,
                     headers: {
@@ -47,15 +83,19 @@ const Bcinfo = () => {
                     }
                   } )
                 const order = {
-                orderItemId: orderItem.idOrderItem,
+                orderItemId: index+1,
                 produit: produitResponse.data.nomProduit,
                 class:produitResponse.data.class,
+                type:produitResponse.data.type,
                 quantity: orderItem.quantity,
+                suite: orderItem.suiteCommande,
                 unite: orderItem.unite
                 };
                 return order
               
-            }));    
+            }));   
+            setData(initialQuantities);
+  
             console.log("response : ",response.data)
             console.log("initial quantities:", initialQuantities);
     
@@ -65,7 +105,7 @@ const Bcinfo = () => {
             the array, which can be useful in certain scenarios. */
             // const updatedProducts = [{}].concat(initialQuantities);
       
-            setData(initialQuantities);
+            
     
             
             // console.log("products after state update:", products);
@@ -93,8 +133,17 @@ const Bcinfo = () => {
   //     ))
   //     setProducts(initialQuantities)
   // },[data])
-  useEffect(() => {
+  useEffect( () => {
     console.log("data changed! :",data);
+    fetchBonCommande()
+    // const bonCommandeResponse = await axios.get(`http://localhost:3000/api/v1/bons-commandes${bonCommandeId}`,{
+    //   withCredentials: true,
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${token}`
+    //   }
+    // }) 
+    // setCurrentBonCommande( bonCommandeResponse.data)
   
   }, [data]);
 
@@ -165,40 +214,65 @@ const Bcinfo = () => {
 
   const columns = [
     {
-      id:1,
-      field: "orderItemId",
-      headerName: "id",
-      flex: 1,
-      
-    },
-    {
       id:2,
       field: "produit",
       headerName: "produit",
-      flex: 1,
-    },
-    {
-      id:3,
-      field: "quantity",
-      headerName: "quantity",
-      flex: 1,
-      cellClassName:"quantity-column--cell"
-     
-    },
-    {
-      id:4,
-      field: "class",
-      headerName: "class",
-      flex: 1,
-
-    },
-    {
-      id:5,
-      field:"unite",
-      headerName:"Unité",
-      flex:2,
+      flex: 0.75,
     }
     ];
+    if (currentBonCommande.type === 'SUITE') {
+      columns.push(
+        {
+        id:3,
+        field: "suite",
+        headerName: "SUITE",
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+        }
+      )
+    }
+    else {
+      columns.push(
+        {
+        id:3,
+        field: "quantity",
+        headerName: "quantity",
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+        })
+    }
+    columns.push(
+      {
+        id:4,
+        field: "class",
+        headerName: "class",
+        flex: 0.5,
+        renderCell: (params) => (
+          <Box>
+            <Chip variant="contained" label={params.row.class} sx={{
+              background:classColors[params.row.class],
+              color:'black'
+            }}></Chip>
+          </Box>
+        )
+  
+      },
+      {
+        id:5,
+        field:"type",
+        headerName:"TYPE",
+        flex:1,
+        renderCell: (params) => (
+          <Box>
+            <Chip variant="contained" label={params.row.type} sx={{
+              background:typeColors[params.row.type],
+              color:'black'
+            }}></Chip>
+          </Box>
+        )
+        
+      }
+    )
   
   return (
     <Box m="20px">
@@ -257,7 +331,6 @@ const Bcinfo = () => {
         }}
       >
         <DataGrid
-        checkboxSelection
         rows={data}
         columns={columns}
         getRowId={(row)=>row.orderItemId}

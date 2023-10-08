@@ -12,6 +12,7 @@ import { AuthContext } from "../../contexts/Auth";
 import { Link } from "react-router-dom";
 import { tokens } from "../../theme";
 import NotificationsCenter from "../../components/notificationsCenter";
+import NotificationSection from "../../components/notificationSection/index"
 
 //import SearchIcon from "@mui/icons-material/Search";
 
@@ -78,6 +79,11 @@ const Topbar = () => {
         <IconButton onClick={handleClick}>
           <LogoutIcon  />
         </IconButton>
+        <Box sx={{
+          transform:'translate(950px,0px)'
+        }}>
+        <NotificationSection />
+        </Box>
       </Box>
     </Box>
   );

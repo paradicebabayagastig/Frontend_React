@@ -1,4 +1,4 @@
-import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme, Modal, FormControl } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -8,6 +8,8 @@ import {AuthContext} from "../../contexts/Auth"
 import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
+import ReactDataGrid from '@inovua/reactdatagrid-community'
+import '@inovua/reactdatagrid-community/index.css'
 
 const AddBon = () => {
    
@@ -19,7 +21,6 @@ const AddBon = () => {
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
         const [data,setData] = useState([]);
-        const [products,setProducts] = useState([])
         const [loading, setLoading] = useState(false);
         const [success, setSuccess] = useState(false);
         const [redirect, setRedirect] = useState(false);
@@ -27,6 +28,21 @@ const AddBon = () => {
         const navigate = useNavigate();
         const [currentBonCommande,setCurrentBonCommande]= useState({})
         const [existingOrderItems,setExistingOrderItems] = useState([])
+        const [open, setOpen] = useState(false);
+        const handleOpen = () => setOpen(true);
+        const handleClose = () => setOpen(false);
+        const style = {
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: colors.primary[400],
+          border: '2px solid #000',
+          boxShadow: 24,
+          borderRadius:'30px',
+          p: 4,
+        };
 
         async function fetchData() {
           try {
@@ -40,26 +56,57 @@ const AddBon = () => {
 
             const availableProducts = response.data.filter((produit) => produit.availability === true);      
 
-            const initialQuantities = availableProducts.map((produit) => ({
+            const initialQuantities = availableProducts.map((produit,index) => ({
+              index:index,
               idProduit: produit.idProduit,
               produit:produit.nomProduit,
               class:produit.class,
+              type:produit.type,
               quantity: 0,
-              unite: "BAC5",
             }));
-      
-            const updatedProducts = [{}].concat(initialQuantities);
-
-            console.log("products :",initialQuantities)
-            
             setData(initialQuantities);
-            setProducts(updatedProducts);
+           
           }
        
           catch(err) {
             console.log(err)
           }
         }
+
+        async function fetchSuite() {
+          try {
+            const response = await axios.get("http://localhost:3000/api/v1/produits", {
+              withCredentials: true,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            const availableProducts = response.data.filter((produit) => {
+              const c1 = produit.availability === true 
+              const c2 = produit.type === "PARFUM"
+              const c3 = produit.class === "NORMAL"
+              return c1&&c2&&c3
+            });     
+
+
+            const initialQuantities = availableProducts.map((produit,index) => ({
+              index:index,
+              idProduit: produit.idProduit,
+              produit:produit.nomProduit,
+              class:produit.class,
+              type:produit.type,
+              suite: 0,
+            }));
+            setData(initialQuantities);
+          }
+       
+          catch(err) {
+            console.log(err)
+          }
+        }
+
         const getBc =async ()=>{
           try{
           const response = await axios.get(`http://localhost:3000/api/v1/bons-commandes/${bonCommandeId}`, {
@@ -120,13 +167,8 @@ const AddBon = () => {
                 unite:orderItem.unite,
                 suite:orderItem.suiteCommande
               }
-             
-
-
-              // Add other order item properties as needed
             }))
             console.log("orders : ", orderItems)
-            // Set boncommandes and orderItems in your state
             setData(orderItems);
           } else {
             // Handle the case where no boncommande other than the current one was found
@@ -144,7 +186,7 @@ const AddBon = () => {
 
   useEffect(()=>{
     if (currentBonCommande.type === 'SUITE') {
-      getBonCommandeByCommandeId()
+      fetchSuite()
     }
     else {
       fetchData()
@@ -183,17 +225,17 @@ const AddBon = () => {
 
   useEffect(() => {
     if (redirect) {
-      navigate('/commande');
+      navigate(`/modifierCommande/${currentBonCommande.commandeId}`);
     }
   }, [redirect, navigate]);
 
-  const handleChange = (productId) => (event) =>{
+  const handleChange = (index) => (event) =>{
     let newQuantity = event.target.value;
     newQuantity = parseInt(newQuantity)
     if (currentBonCommande.type !== 'SUITE') {
       setData((prevData) => {
         return prevData.map((item) => {
-          if (item.idProduit === productId) {
+          if (item.index === index) {
             return { ...item, quantity:newQuantity   };
           }
           return item;
@@ -203,7 +245,7 @@ const AddBon = () => {
     else {
       setData((prevData) => {
         return prevData.map((item) => {
-          if (item.idProduit === productId) {
+          if (item.index === index) {
             return { ...item, suite:newQuantity   };
           }
           return item;
@@ -213,12 +255,12 @@ const AddBon = () => {
     }
     
   }
-  const handleUnitChange = (productId) => (event) => {
+  const handleUnitChange = (index) => (event) => {
     let newUnit = event.target.value;
     
-    setProducts((prevProducts) => ({
-      ...prevProducts,
-      [productId]: {...prevProducts[productId],unite:newUnit}
+    setData((prevData) => ({
+      ...prevData,
+      [index]: {...prevData[index],unite:newUnit}
     }));
 
   }
@@ -226,45 +268,96 @@ const AddBon = () => {
   const handleSubmit = async () => {
     if (currentBonCommande.type !== 'SUITE'
     ) {
-      Object.keys(data).forEach(index => {
+      Object.keys(data).forEach(async (index) => {
         if ( (data[index].quantity !== 0)) {
-          console.log('true :',data[index])
-          axios.post('http://localhost:3000/api/v1/orderItem', {
+          try {
+            const createOrder = await axios.post('http://localhost:3000/api/v1/orderItem', {
             bonCommandeId: bonCommandeId,
             produitId: parseInt(data[index].idProduit),
             quantity: data[index].quantity,
             unite: data[index].unite
-          }, { withCredentials: true })
-          .then((response) => {
+          }, {
+             withCredentials: true,
+             headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+            })
+          const newOrderId = createOrder.data.idOrderItem
+          console.log(newOrderId)
+          const createFabrication = await axios.put(`http://localhost:3000/api/v1/fabItem/${newOrderId}`,{
+            withCredentials:true,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
           })
-          .catch((err) => {
-            console.log(err);
-            setAllgood(false); // Set allGood to false if any error occurs
-          });
+          console.log(createFabrication)
+          }
+          catch (err) {console.log(err)}
         }
-      });      
+      }); 
+      const updateBonCommande = await axios.patch(`http://localhost:3000/api/v1/bons-commandes/${bonCommandeId}`,{
+        withCredentials:true,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }) 
+      console.log('response :',updateBonCommande)    
     }
     else {
-      Object.keys(data).forEach(index => {
+      for (const index of Object.keys(data)) {
         if (data[index].suite !== 0) {
-          axios.patch('http://localhost:3000/api/v1/orderItem' , {
-          idOrderItem:data[index].idOrderItem,
-          suiteCommande:data[index].suite
-          }, {
-            withCredentials: true
+          try {
+            // First, create the order
+            const orderCreate = await axios.post(
+              'http://localhost:3000/api/v1/orderItem',
+              {
+                bonCommandeId: bonCommandeId,
+                produitId: parseInt(data[index].idProduit),
+                suiteCommande: data[index].suite,
+                
+              },
+              {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+              }
+            );
+            const idOrderItem = orderCreate.data.idOrderItem
+            console.log(orderCreate);
+      
+            // Then, update the fabrication order
+            const fabricationOrderUpdate = await axios.put(
+              `http://localhost:3000/api/v1/fabItem/${idOrderItem}`,
+              {},
+              {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+              }
+            );
+            console.log(fabricationOrderUpdate);
+          } catch (error) {
+            console.log(error);
           }
-          )
-          .then ((response) => {
-
-          })
-          .catch((error) => {
-            console.log(error)
-            setAllgood(false)
-          }
-          
-          )
         }
-      })
+      }
+      const updateBonCommande = await axios.patch(`http://localhost:3000/api/v1/bons-commandes/${bonCommandeId}`,{
+        withCredentials:true,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }) 
+      console.log('response :',updateBonCommande)    
+      
+
     }
 
   
@@ -290,53 +383,31 @@ const AddBon = () => {
     {
       id:1,
       field: "idProduit",
-      headerName: "id",
+      headerName: <b>ID</b>,
       flex: 1,
       
     },
     {
       id:2,
       field: "produit",
-      headerName: "produit",
+      headerName: <b>PRODUIT</b>,
       flex: 1,
     },
     {
       id:4,
       field: "class",
-      headerName: "class",
+      headerName: <b>CLASS</b>,
       flex: 1,
 
     },
     {
       id:5,
-      field:"unite",
-      headerName:"Unité",
-      valueOptions: ['United Kingdom', 'Spain', 'Brazil'],
-      flex:2,
-      renderCell: (params) => (
-        
-          
-          <Box>
-          <InputLabel htmlFor="filled-adornment-unit">{products[params.row.idProduit]?.unite !== undefined ? "" : "unite"}</InputLabel>
-          <Select 
-          inputProps={{
-                    name: 'unite',
-                    id: 'filled-adornment-unit',
-                  }} 
-          value={products[params.row.idProduit]?.unite ?? "BAC5"} 
-          onChange={handleUnitChange(params.row.idProduit)} 
-           >
-            <MenuItem key="1" value="BAC5">BAC 5L</MenuItem>
-            <MenuItem key="2" value="BAC6">BAC 6,5L</MenuItem>
-            <MenuItem key="3" value="POZZETTI_PLAZA">POZZETTI_PLAZA</MenuItem>
-            <MenuItem key="4" value="POZZETTI_AZUR">POZZETTI_AZUR</MenuItem>
-            <MenuItem key="5" value="LOT_DE_50">LOT_DE_50</MenuItem>
-          </Select>
-          </Box>
-        
-        
-        )
-    },
+      field: "type",
+      headerName: <b>TYPE</b>,
+      flex: 1,
+
+    }
+    
   
     ];
   if(currentBonCommande.type ==='SUITE'){
@@ -347,58 +418,106 @@ const AddBon = () => {
       headerName: "Suite",
       flex: 1,
       renderCell: (params) => (
-        <Box sx={{
-          height:50
-        }}>
+        <Box sx={{ height: 50 }}>
+        {params.isSelected ? (
+          <Box>
+            <Button>-</Button>
+            <TextField
+              type="number"
+              value={data[params.row.index]?.quantity ?? 0}
+              onChange={handleChange(params.row.index)}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 50,
+              }}
+            />
+            <Button>+</Button>
+          </Box>
+        ) : (
+          // <Box>{data[params.row.index]?.quantity ?? 0}</Box>
+     
           <TextField
-          type="number"
-          value={data[params.row.idProduit-1]?.suite ?? 0}
-          onChange={handleChange(params.row.idProduit)}
-          variant="outlined"
-          sx={{
-           width:65,
-           '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-            '-webkit-appearance': 'none',
-            margin: 0,
-          },
+            type="number"
+            value={data[params.row.index]?.suite ?? 0}
+            onChange={handleChange(params.row.index)}
+            variant="outlined"
+            sx={{
+              width: 65,
+              '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                '-webkit-appearance': 'none',
+                margin: 0,
+              },
             }}
             inputProps={{
               min: 0,
               step: 50,
             }}
-        />
-        </Box>
+          />
+
+        )}
+      </Box>
         )
     }
   )}else{
     columns.push({
       id:3,
       field: "quantity",
-      headerName: "quantity",
+      headerName: <b>QTE</b>,
       flex: 1,
       // disabled:{bonCommande.type==="SUITE"},
       renderCell: (params) => (
-        <Box sx={{
-          height:50
-        }}>
-          <TextField
-          type="number"
-          value={data[params.row.idProduit-1]?.quantity ?? 0}
-          onChange={handleChange(params.row.idProduit)}
-          variant="outlined"
-          sx={{
-           width:65,
-           '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-            '-webkit-appearance': 'none',
-            margin: 0,
-          },
-            }}
-            inputProps={{
-              min: 0,
-              step: 50,
-            }}
-        />
-        </Box>
+        <Box sx={{ height: 50 }}>
+        {params.row.isSelected ? (
+         
+            <TextField
+              type="number"
+              value={data[params.row.index]?.quantity ?? 0}
+              onChange={handleChange(params.row.index)}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 50,
+              }}
+            />
+     
+        ) : (
+          // <Box>{data[params.row.index]?.quantity ?? 0}</Box>
+         
+            <TextField
+              type="number"
+              value={data[params.row.index]?.quantity ?? 0}
+              onChange={handleChange(params.row.index)}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 50,
+              }}
+            />
+        
+        )}
+      </Box>
         )
     },)
   }
@@ -425,7 +544,84 @@ const AddBon = () => {
           />
         </Box>
       ) }
-      <Header title="AJOUTER COMMANDE"  />
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <Header title="AJOUTER COMMANDE"  />
+        {
+          (currentBonCommande.type === 'SUITE')&&(
+            <Button
+            onClick={handleOpen}
+            sx={{
+              background:colors.primary[400],
+              color:colors.primary[100],
+              '&:hover':{
+                background:colors.pinkAccent[400],
+              }
+            }}
+            >
+              Ajouter Nouveau Produit
+            </Button>
+          )
+        }
+        <Modal
+        open={open}
+        onClose={handleClose}
+        >
+          <Box
+          sx={style}>
+
+        <FormControl fullWidth>
+          <InputLabel 
+          id="demo-simple-select-label"
+          sx={{
+           color:colors.primary[100],
+           '& .MuiOutlinedInput-input:focused': {
+            color: colors.pinkAccent[400],
+          }
+          }}
+          >Produit</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            // value={age}
+            label="Age"
+            // onChange={handleChange}
+            sx={{
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: colors.primary[200],
+                color:colors.primary[200]
+              },
+            }}
+          >
+            <MenuItem value={10}>Ten</MenuItem>
+            <MenuItem value={20}>Twenty</MenuItem>
+            <MenuItem value={30}>Thirty</MenuItem>
+          </Select>
+        </FormControl>
+        <Button
+        sx={{
+          mt:5,
+          ml:30,
+          background:colors.button[100],
+          color:colors.button[200],
+          "&:hover":{
+            background:colors.button[200],
+            color:colors.button[100],
+          }
+        }}
+        >
+          Ajouter
+        </Button>
+          
+            
+          </Box>
+          
+        </Modal>
+      </Box>
+      
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -474,6 +670,7 @@ const AddBon = () => {
         }}
       
         />
+        
       </Box>
       <Button type="submit" variant="contained" size="large" onClick={handleSubmit} sx={{
         mt:2.5,

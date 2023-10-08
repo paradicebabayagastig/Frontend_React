@@ -47,8 +47,8 @@ const Invoices = () => {
   const columns = [
     {
       id:1,
-      field: "idCommande",
-      headerName: "N° Commande",
+      field: "reference",
+      headerName: "Reference",
       flex: 0.5,
       cellClassName: "name-column--cell",
       
@@ -221,6 +221,7 @@ const Invoices = () => {
   
           const orderWithUserName = {
             idCommande: order.idCommande,
+            reference : order.refBC,
             dateCommande: dateOnly,
             fabricationId: order.fabricationId,
             livraison:order.livraison,

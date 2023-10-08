@@ -1,6 +1,6 @@
 import { AuthContext } from "../../contexts/Auth";
 import { useEffect, useContext, useState } from "react";
-import { Box, Grid, CircularProgress, Fab, Modal, TextField, Button, Select, InputLabel, MenuItem, FormControl, Typography } from "@mui/material";
+import { Box, Grid, CircularProgress, Fab, Modal, TextField, Button, Select, InputLabel, MenuItem, FormControl, Typography, IconButton } from "@mui/material";
 import IceCreamCard from "../../components/flavorCard";
 import axios from "axios";
 import { useTheme } from "@emotion/react";
@@ -23,7 +23,7 @@ const Products = () => {
     const [hiddenProducts, setHiddenProducts] = useState([]);
     const [loading, setLoading] = useState(false); // State for loading indicator
     const [corbeil,setCorbeil] = useState(false);
-    const openCorbeil  = () => setCorbeil(!corbeil);
+    const openCorbeil  = () => setCorbeil(true);
     const closeCorbeil  = () => setCorbeil(false);
 
 
@@ -204,35 +204,45 @@ const renderProductsByTypeAndClass = () => {
   return (
     <Box margin={3} >
         <>
-        <AutoDeleteIcon
+        <IconButton
+          onClick={openCorbeil}
           sx={{
-            color: colors.pinkAccent[400],
-            fontSize: '32px', // Increase the font size to make it bigger
             float: 'right', // Align the icon to the right
             marginTop: theme.spacing(1), // Add margin-top to the button
             marginRight: theme.spacing(1), // Add margin-right to the button
           }}
-          onClick={openCorbeil}
+        >
+        <AutoDeleteIcon
+          sx={{
+            color: colors.pinkAccent[400],
+            fontSize: '32px', // Increase the font size to make it bigger
+           
+          }}
+          
         />
+        </IconButton>
+        
         {renderProductsByTypeAndClass()}
 
 
     <Modal
       open={corbeil}
       onClose={closeCorbeil}
-      style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 500, // Adjust the width as needed
-        backgroundColor: colors.blueAccent[600], // Replace with your desired background color
-        border: '2px solid #000',
-        // boxShadow: 24,
-        borderRadius: '30px',
-      }}
+      
+      // style={{
+      //   position: 'absolute',
+      //   top: '50%',
+      //   left: '50%',
+      //   transform: 'translate(-50%, -50%)',
+      //   width: 500, // Adjust the width as needed
+      //   backgroundColor: colors.blueAccent[600], // Replace with your desired background color
+      //   border: '2px solid #000',
+      //   // boxShadow: 24,
+      //   borderRadius: '30px',
+      // }}
     >
-      <Box>
+      <Box
+      sx={style}>
         <h2 style={{textAlign:'center'}}>Corbeille</h2>
         <TableContainer>
           <Table>

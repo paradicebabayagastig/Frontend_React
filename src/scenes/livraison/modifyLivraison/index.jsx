@@ -44,7 +44,34 @@ const LivraisonEdit = () => {
                 const newData = [...data];
             
                 // Update the livraison value for the specific row
-                newData[rowIndex].livraison = newValue;
+                newData[rowIndex].QteLivre = newValue;
+            
+                // Update the state with the new data
+                setData(newData);
+            }
+            catch (error) {
+
+            }
+           
+          };
+          const handleEcartChange = async (rowIndex, orderItemId, newValueStr) => {
+            const newValue = parseInt(newValueStr)
+            try {
+                const response = await axios.patch('http://localhost:3000/api/v1/orderItem/ecart',{
+                    idOrderItem:orderItemId,
+                    ecart:newValue
+                },{
+                    withCredentials:true,
+                    headers:{
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                 // Create a copy of the data array
+                const newData = [...data];
+            
+                // Update the livraison value for the specific row
+                newData[rowIndex].ecart = newValue;
             
                 // Update the state with the new data
                 setData(newData);
@@ -115,9 +142,9 @@ const LivraisonEdit = () => {
               class:produitResponse.data.class,
               quantity: orderItem.quantity,
               suiteCommande:orderItem.suiteCommande,
-              livraison:orderItem.livraison,
+              QteLivre:orderItem.QteLivre,
+              ecart:orderItem.ecart,
               feedback:orderItem.feedback,
-              unite: orderItem.unite
               };
               return order
             }))
@@ -266,16 +293,49 @@ const LivraisonEdit = () => {
 
     },
     {
+      id:8,
+      field: "ecart",
+      headerName: "ecart",
+      flex: 1,
+      renderCell: (params) =>
+          role !== 'POINT_DE_VENTE' ? (
+            <Box sx={{ height: 50 }}>
+              <TextField
+                type="number"
+                value={data[params.row.index]?.ecart ?? 10}
+                onChange={(e) =>
+                  handleEcartChange(params.row.index, params.row.orderItemId, e.target.value)
+                }
+                variant="outlined"
+                sx={{
+                  width: 65,
+                  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                    '-webkit-appearance': 'none',
+                    margin: 0,
+                  },
+                }}
+                inputProps={{
+                  min: 0,
+                  step: 50,
+                }}
+              />
+            </Box>
+          ) : (
+            data[params.row.index]?.ecart ?? ''
+          ),
+
+    },
+    {
         id: 5,
-        field: "livraison",
-        headerName: "Livraison",
+        field: "QteLivre",
+        headerName: "QteLivre",
         flex: 1,
         renderCell: (params) =>
           role !== 'POINT_DE_VENTE' ? (
             <Box sx={{ height: 50 }}>
               <TextField
                 type="number"
-                value={data[params.row.index]?.livraison ?? 0}
+                value={data[params.row.index]?.QteLivre ?? 10}
                 onChange={(e) =>
                   handleLivraisonChange(params.row.index, params.row.orderItemId, e.target.value)
                 }
@@ -337,13 +397,7 @@ const LivraisonEdit = () => {
       flex: 1,
 
     },
-    {
-      id:8,
-      field: "unite",
-      headerName: "Unité",
-      flex: 1,
-
-    },
+ 
     ];
   
   return (
