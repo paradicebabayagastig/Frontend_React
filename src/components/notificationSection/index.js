@@ -31,6 +31,7 @@ import NotificationList from './notificationList';
 
 // assets
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { tokens } from '../../theme';
 // notification status options
 const status = [
     {
@@ -55,6 +56,7 @@ const status = [
 
 const NotificationSection = () => {
     const theme = useTheme();
+    const colors = tokens(theme.palette.mode);
     const matchesXs = useMediaQuery(theme.breakpoints.down('md'));
 
     const [open, setOpen] = useState(false);
@@ -105,11 +107,11 @@ const NotificationSection = () => {
                             ...theme.typography.commonAvatar,
                             ...theme.typography.mediumAvatar,
                             transition: 'all .2s ease-in-out',
-                            background: theme.palette.secondary.light,
-                            color: theme.palette.secondary.dark,
+                            background: colors.primary[500],
+                            color: colors.pinkAccent[400],
                             '&[aria-controls="menu-list-grow"],&:hover': {
-                                background: theme.palette.secondary.dark,
-                                color: theme.palette.secondary.light
+                                background: colors.pinkAccent[400],
+                                color: "#FFFFFF"
                             }
                         }}
                         ref={anchorRef}
@@ -145,16 +147,20 @@ const NotificationSection = () => {
                         <Paper
                              sx={{
                                 width: '400px', // Set an initial width
+                                borderRadius: 5
                             }}
                         >
                             <ClickAwayListener onClickAway={handleClose}>
-                                <MainCard border={false} elevation={16} content={false} boxShadow shadow={theme.shadows[16]}>
+                                <MainCard border={false} elevation={16} content={false} boxShadow shadow={theme.shadows[16]} sx={{
+                                    borderRadius: 5,
+                                    background: colors.primary[400]
+                                }}>
                                     <Grid container direction="column" spacing={2}>
                                         <Grid item xs={12}>
                                             <Grid container alignItems="center" justifyContent="space-between" sx={{ pt: 2, px: 2 }}>
                                                 <Grid item>
                                                     <Stack direction="row" spacing={2}>
-                                                        <Typography variant="subtitle1">All Notification</Typography>
+                                                        <Typography variant="subtitle1">History</Typography>
                                                     </Stack>
                                                 </Grid>
                                                 <Grid item>

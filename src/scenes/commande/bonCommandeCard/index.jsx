@@ -27,8 +27,8 @@ const OrderItemForm = (props) => {
     border: `1px solid ${colors.grey[300]}`,
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
     width: '400px',
-    margin: 'auto',
-    padding: '24px', // Increased padding for more spacious appearance
+   
+   // Increased padding for more spacious appearance
   };
 
   const titleStyle = {
@@ -48,7 +48,8 @@ const OrderItemForm = (props) => {
   const modifyButtonStyle = {
     // display:"flex",
     // gap:5,
-    marginTop: '16px',
+    marginTop: '12px',
+    marginBottom: '12px',
     marginRight: 15,
     float: 'right'
   };

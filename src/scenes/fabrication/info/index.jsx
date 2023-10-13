@@ -25,11 +25,28 @@ const FabricationInfo = () => {
         // const [products,setProducts] = useState([])
         const [loading, setLoading] = useState(false);
         const [success, setSuccess] = useState(false);
-        const [redirect, setRedirect] = useState(false);
-        const [allgood,setAllgood] = useState(true)
+        const [bf,setBf] = useState({})
         const navigate = useNavigate();
 
-        const message = ("Information bon fabrication n°"+ bonfabricationId )
+        const message = ("Bon Fabrication ")
+
+        async function fetchData() {
+          try {
+              const fabricationInfo = await axios.get(`http://localhost:3000/api/v1/fabrication/${bonfabricationId}`,
+              {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              })
+              setBf(fabricationInfo.data)
+          }
+          catch (error) {
+            console.log(error)
+          }
+        }
+        
         async function fetchFabricationOrders() {
           try {
             const fabricationOrders = await axios.get(
@@ -100,63 +117,17 @@ const FabricationInfo = () => {
         
   useEffect(()=>{
     
-    // fetchData()
+    fetchData()
     fetchFabricationOrders()
   },[])
 
+  useEffect(()=>{
+    
+    console.log(bf)
+  },[bf])
 
- 
-  
 
-//   const handleChange = (productId) => (event) =>{
-//     let newQuantity = event.target.value;
-//     newQuantity = parseInt(newQuantity)
-//     console.log("Updating quantity for product", productId, "to", newQuantity);
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],quantity:newQuantity}
-//     }));
-// //   }
-//   const handleUnitChange = (productId) => (event) => {
-//     let newUnit = event.target.value;
-//     console.log(newUnit)
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],unite:newUnit}
-//     }));
 
-//   }
-
-//   const handleSubmit = () => {
-//     console.log(products)
-//     Object.keys(products).forEach( index => {
-//       if (index !== 0) {
-//         console.log(`Product ID: ${products[index].productId}, Quantity: ${products[index].quantity}`);
-        
-//         axios.post('http://localhost:3000/api/v1/orderItem', {
-//           bonCommandeId: bonCommandeId,
-//           produitId: parseInt(products[index].productId),
-//           quantity: products[index].quantity,
-//           unite: products[index].unite
-//         }, { withCredentials: true })
-//         .then((response) => {
-//           console.log(response);
-//         })
-//         .catch((err) => {
-//           console.log(err);
-//           setAllgood(false); // Set allGood to false if any error occurs
-//         });
-//       }
-//     });
-  
-//     if (allgood) {
-//       setLoading(true);
-//       setTimeout(() => {
-//         setSuccess(true);
-//       }, 3000);
-//     }
-//   };
-  
   const kiloColumns = [
     {
       id:1,
@@ -174,6 +145,7 @@ const FabricationInfo = () => {
     {
       id:3,
       field: "totalBac",
+      editable: true,
       headerName: <b>QTE</b>,
       flex: 0.125,
       
@@ -191,6 +163,7 @@ const FabricationInfo = () => {
     {
       id:2,
       field: "totalBac",
+      editable: true,
       headerName: <b>QTE</b>,
       flex: 0.125,
       
@@ -206,6 +179,7 @@ const FabricationInfo = () => {
     {
       id:2,
       field: "totalBac",
+      editable: true,
       headerName: <b>TOTAL BACS</b>,
       flex: 0.25,
       cellClassName:"quantity-column--cell"
@@ -214,6 +188,7 @@ const FabricationInfo = () => {
     {
       id:3,
       field: "totalSuite",
+      editable: true,
       headerName: <b>SUITE COMMANDE</b>,
       flex: 0.25,
 
@@ -221,6 +196,7 @@ const FabricationInfo = () => {
     {
       id:4,
       field: "pztPlaza",
+      editable: true,
       headerName: <b>POZZETI PLAZA</b>,
       flex: 0.25,
 
@@ -228,12 +204,14 @@ const FabricationInfo = () => {
     {
       id:5,
       field:"pztAzur",
+      editable: true,
       headerName:<b>POZZETI AZUR</b>,
       flex:0.25,
     },
     {
       id:6,
       field:"pztSuitz",
+      editable: true,
       headerName:<b>POZZETI SUITE</b>,
       flex:0.25,
     }
@@ -262,10 +240,15 @@ const FabricationInfo = () => {
         </Box>
       ) }
       <Box display="flex">
-      <Header title={message}  />
+      <Header title={message} />
       <Chip 
       sx={{
-          marginLeft:'auto'
+          marginLeft:'auto',
+          background: colors.primary[400],
+          "&:hover":{
+            background: colors.pinkAccent[400]
+          },
+          padding: 3
       }}
       clickable
       icon={<PrintIcon />} 
@@ -273,6 +256,25 @@ const FabricationInfo = () => {
 
         
       </Box>
+      {
+        (bf && bf.reference) && (
+          <Box>
+            <Box
+            display="flex" 
+            >
+            <Typography>reference : </Typography><Typography sx={{color:colors.pinkAccent[400],ml:1}}>{bf.reference}</Typography>
+            </Box>
+            <Box
+              display="flex" 
+            >
+              
+            <Typography>date :</Typography> <Typography sx={{color:colors.pinkAccent[400],ml:1}}>{bf.dateFabrication.split('T')[0]}</Typography>
+            </Box>
+            
+            
+          </Box>
+        )
+      }
     
       <Box
         m="40px 0 0 0"
@@ -308,51 +310,76 @@ const FabricationInfo = () => {
           '& .MuiDataGrid-virtualScroller::-webkit-scrollbar': {display: 'none' }
         }}
       >
-        <DataGrid
-        rows={data}
-        columns={columns}
-        getRowId={(row)=>row.index}
-        // components={{ Toolbar: GridToolbar }}
-        hideScrollbarX // Hide horizontal scroll bar
-        hideScrollbarY // Hide vertical scroll bar
-        sx={{
-          flex: 2.75
-        }}
-        />
-         <DataGrid
-        rows={kgData}
-        columns={kiloColumns}
-        getRowId={(row)=>row.index}
-        hideScrollbarX // Hide horizontal scroll bar
-        hideScrollbarY // Hide vertical scroll bar
-        sx={{
-          flex: 2
-        }}
-        />
+        {data && data.length>0? (
+          <DataGrid
+          editMode="row"
+          rows={data}
+          columns={columns}
+          getRowId={(row)=>row.index}
+          // components={{ Toolbar: GridToolbar }}
+          hideScrollbarX // Hide horizontal scroll bar
+          hideScrollbarY // Hide vertical scroll bar
+          sx={{
+            flex: 2.75
+          }}
+          />
+
+        ) : (
+          <DataGrid 
+                rows={[]}
+                columns={fournitureColumns}
+                sx={{
+                  flex: 1.75
+                }}
+                /> 
+        )}
+        {kgData && kgData.length>0? (
+          <DataGrid
+          editMode="row"
+         rows={kgData}
+         columns={kiloColumns}
+         getRowId={(row)=>row.index}
+         hideScrollbarX // Hide horizontal scroll bar
+         hideScrollbarY // Hide vertical scroll bar
+         sx={{
+           flex: 2
+         }}
+         />
+        ): (
+          <DataGrid 
+                rows={[]}
+                columns={kiloColumns}
+                sx={{
+                  flex: 1.75
+                }}
+                />
+        )}
+         
         {
           (role === 'RESPONSABLE_LOGISTIQUE') && (
-            <DataGrid
-        rows={fournitureData}
-        columns={fournitureColumns}
-        getRowId={(row)=>row.index}
-        hideScrollbarX = {true} // Hide horizontal scroll bar
-        hideScrollbarY // Hide vertical scroll bar
-        sx={{
-          flex: 1.75
-        }}
-        />
+            (fournitureData && fournitureData.length>0?  <DataGrid
+              editMode="row"
+          rows={fournitureData}
+          columns={fournitureColumns}
+          getRowId={(row)=>row.index}
+          hideScrollbarX = {true} // Hide horizontal scroll bar
+          hideScrollbarY // Hide vertical scroll bar
+          sx={{
+            flex: 1.75
+          }}
+          /> :  <DataGrid 
+                rows={[]}
+                columns={fournitureColumns}
+                sx={{
+                  flex: 1.75
+                }}
+                /> )
+           
           )
         }
           
       </Box>
-      <Snackbar open={success} autoHideDuration={2000}>
-        <Alert sx={{
-          position: 'fixed',
-          bottom: '50px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}  severity="success">Operation Successful! Redirecting...</Alert>
-      </Snackbar>
+      
     </Box>
 );
 };

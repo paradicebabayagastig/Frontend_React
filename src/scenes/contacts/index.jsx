@@ -30,6 +30,7 @@ const Contacts = () => {
       headerName: "Name",
       flex: 1,
       cellClassName: "name-column--cell",
+      editable: true,
     },
     {
       field: "email",
@@ -112,6 +113,7 @@ const Contacts = () => {
         }}
       >
         <DataGrid
+         editMode="row"
           density="comfortable"
           checkboxSelection
           getRowId={(row)=>row.idUtilisateur}

@@ -17,7 +17,11 @@ const CommandeInfo = () => {
         const token = authCtx.isAuthenticated;
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
-        const [data,setData] = useState([]);
+        const [aggregatedData, setAggregatedData] = useState({
+          FOURNITURE: [],
+          KG: [],
+          SUITE: [],
+        });
         // const [products,setProducts] = useState([])
         const [loading, setLoading] = useState(true);
         const navigate = useNavigate();
@@ -25,9 +29,28 @@ const CommandeInfo = () => {
         const message = ("Information commande n°"+ commandeId )
         async function fetchData() {
           try {
-            
-                const bonCommandeResponse = await axios.get(
-                  `http://localhost:3000/api/v1/bons-commandes/commande/${commandeId}`,
+            const bonCommandeResponse = await axios.get(
+              `http://localhost:3000/api/v1/bons-commandes/commande/${commandeId}`,
+              {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+        
+            // Initialize categorized orders
+            const categorizedOrders = {
+              FOURNITURE: {},
+              KG: {},
+              SUITE: {},
+            };
+        
+            await Promise.all(
+              bonCommandeResponse.data.map(async (bonCommande) => {
+                const orderItemsResponse = await axios.get(
+                  `http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`,
                   {
                     withCredentials: true,
                     headers: {
@@ -37,89 +60,51 @@ const CommandeInfo = () => {
                   }
                 );
         
-                const quantities = await Promise.all(
-                  bonCommandeResponse.data.map(async (bonCommande) => {
-                    const orderItemsResponse = await axios.get(
-                      `http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`,
-                      {
-                        withCredentials: true,
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`
-                        }
+                for (const order of orderItemsResponse.data) {
+                  const type = order.type;
+                  const produitResponse = await axios.get(
+                    `http://localhost:3000/api/v1/produits/${order.produitId}`,
+                    {
+                      withCredentials: true,
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                       }
-                    );
+                    }
+                  );
         
-                    const orderItemData = await Promise.all(
-                      orderItemsResponse.data.map(async (orderItem) => {
-                        // Fetch the produit details using idProduit
-                        const produitResponse = await axios.get(
-                          `http://localhost:3000/api/v1/produits/${orderItem.produitId}`,
-                          {
-                            withCredentials: true,
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${token}`
-                            }
-                          }
-                        );
+                  const key = `${produitResponse.data.nomProduit}-${order.unite}`;
         
-                        return {
-                          orderItemId: orderItem.idOrderItem,
-                          produit: produitResponse.data.nomProduit, // Add nomProduit
-                          class: produitResponse.data.class,
-                          type:produitResponse.data.type,
-                          quantity: orderItem.quantity,
-                          suite: orderItem.suiteCommande,
-                          unite: orderItem.unite
-                        };
-                      })
-                    );
+                  if (!categorizedOrders[type][key]) {
+                    categorizedOrders[type][key] = {
+                      id: order.idOrderItem,
+                      produit: produitResponse.data.nomProduit,
+                      class: produitResponse.data.class,
+                      type: produitResponse.data.type,
+                      unite: order.unite,
+                      quantity: 0,
+                      suiteC: 0,
+                    };
+                  }
         
-                    return orderItemData;
-                  })
-                );
+                  categorizedOrders[type][key].quantity += order.quantity;
+                  categorizedOrders[type][key].suiteC += order.suiteCommande;
+                }
+              })
+            );
         
-             
+            // Convert categorized orders into arrays
+            const aggregatedQuantities = {
+              FOURNITURE: Object.values(categorizedOrders.FOURNITURE),
+              KG: Object.values(categorizedOrders.KG),
+              SUITE: Object.values(categorizedOrders.SUITE),
+            };
         
-            // Flatten the nested arrays for all Commandes
-            const allQuantitiesFlat = quantities.flat();
-        
-            // Group and aggregate quantities by product and unite
-            const aggregatedQuantities = allQuantitiesFlat.reduce((result, current) => {
-              const key = `${current.produit}-${current.unite}`;
-              if (!result[key]) {
-                result[key] = {
-                  produit: current.produit,
-                  class: current.class,
-                  type: current.type,
-                  unite: current.unite,
-                  quantity: 0,
-                  suiteC:0,
-                };
-              }
-              result[key].quantity += current.quantity;
-              result[key].suiteC += current.suite;
-              return result;
-            }, {});
-        
-            // Convert the aggregated quantities into an array
-            const aggregatedQuantitiesArray = Object.values(aggregatedQuantities);
-
-            // Add an index to each aggregated item
-            const aggregatedQuantitiesWithIndex = aggregatedQuantitiesArray.map((item, index) => ({
-              index: index+1, // Set the index as the key
-              produit: item.produit,
-              class: item.class,
-              type: item.type,
-              unite: item.unite,
-              quantity: item.quantity,
-              suiteC: item.suiteC,
-            }));
-        
-            console.log("aggregated quantities:", aggregatedQuantitiesWithIndex);
-        
-            setData(aggregatedQuantitiesWithIndex);
+            console.log("Aggregated quantities for FOURNITURE:", aggregatedQuantities.FOURNITURE);
+            
+            console.log("Aggregated quantities for KG:", aggregatedQuantities.KG);
+            console.log("Aggregated quantities for SUITE:", aggregatedQuantities.SUITE);
+            setAggregatedData(aggregatedQuantities)
           } catch (err) {
             console.log(err);
           }
@@ -134,81 +119,21 @@ const CommandeInfo = () => {
 
 
   useEffect(() => {
-    console.log("data changed! :",data);
+    console.log("data changed! :",aggregatedData);
     setLoading(false)
-  }, [data]);
-
-  
-
-//   const handleChange = (productId) => (event) =>{
-//     let newQuantity = event.target.value;
-//     newQuantity = parseInt(newQuantity)
-//     console.log("Updating quantity for product", productId, "to", newQuantity);
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],quantity:newQuantity}
-//     }));
-// //   }
-//   const handleUnitChange = (productId) => (event) => {
-//     let newUnit = event.target.value;
-//     console.log(newUnit)
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],unite:newUnit}
-//     }));
-
-//   }
-
-//   const handleSubmit = () => {
-//     console.log(products)
-//     Object.keys(products).forEach( index => {
-//       if (index !== 0) {
-//         console.log(`Product ID: ${products[index].productId}, Quantity: ${products[index].quantity}`);
-        
-//         axios.post('http://localhost:3000/api/v1/orderItem', {
-//           bonCommandeId: bonCommandeId,
-//           produitId: parseInt(products[index].productId),
-//           quantity: products[index].quantity,
-//           unite: products[index].unite
-//         }, { withCredentials: true })
-//         .then((response) => {
-//           console.log(response);
-//         })
-//         .catch((err) => {
-//           console.log(err);
-//           setAllgood(false); // Set allGood to false if any error occurs
-//         });
-//       }
-//     });
-  
-//     if (allgood) {
-//       setLoading(true);
-//       setTimeout(() => {
-//         setSuccess(true);
-//       }, 3000);
-//     }
-//   };
-  
-
+  }, [aggregatedData]);
   const columns = [
-    {
-      id:1,
-      field: "index",
-      headerName: "id",
-      flex: 0.25,
-      
-    },
     {
       id:2,
       field: "produit",
-      headerName: "Produit",
+      headerName: <b>PRODUIT</b>,
       flex: 1,
       cellClassName:"quantity-column--cell"
     },
     {
       id:3,
       field: "quantity",
-      headerName: "Quantité",
+      headerName: <b>QTE</b>,
       flex: 0.5,
       cellClassName:"quantity-column--cell"
      
@@ -216,25 +141,54 @@ const CommandeInfo = () => {
     {
       id:4,
       field: "suiteC",
-      headerName: "Suite Commande",
+      headerName: <b>SUITE C</b>,
       flex: 0.5,
       cellClassName:"quantity-column--cell"
 
-    },
-    {
-      id:5,
-      field: "class",
-      headerName: "class",
-      flex: 0.5,
-
-    },
-    {
-      id:6,
-      field:"type",
-      headerName:"TYPE",
-      flex:1,
     }
     ];
+    const Folumns = [
+      {
+        id:2,
+        field: "produit",
+        headerName: <b>PRODUIT</b>,
+        flex: 1,
+        cellClassName:"quantity-column--cell"
+      },
+      {
+        id:3,
+        field: "quantity",
+        headerName: <b>QTE</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+       
+      },
+      ];
+      const Kolumns = [
+        {
+          id:2,
+          field: "produit",
+          headerName: <b>PRODUIT</b>,
+          flex: 1,
+          cellClassName:"quantity-column--cell"
+        },
+        {
+          id:3,
+          field: "quantity",
+          headerName: <b>QTE</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+         
+        },
+        {
+          id:3,
+          field: "unite",
+          headerName: <b>UNITE</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+         
+        },
+        ];
   return (
     <Box m="20px">
       {loading && (
@@ -289,13 +243,28 @@ const CommandeInfo = () => {
           "& .MuiCheckbox-root": {
             color: `${colors.pinkAccent[200]} !important`,
           },
+          display:"flex"
         }}
       >
         <DataGrid
-        checkboxSelection
-        rows={data}
+        
+        rows={aggregatedData.SUITE}
         columns={columns}
-        getRowId={(row)=>row.index}
+        getRowId={(row)=>row.id}
+        components={{ Toolbar: GridToolbar }}
+        />
+         <DataGrid
+        
+        rows={aggregatedData.KG}
+        columns={Folumns}
+        getRowId={(row)=>row.id}
+        components={{ Toolbar: GridToolbar }}
+        />
+         <DataGrid
+       edit
+        rows={aggregatedData.FOURNITURE}
+        columns={Kolumns}
+        getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         />
       </Box>

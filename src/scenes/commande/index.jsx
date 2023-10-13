@@ -24,7 +24,7 @@ const AddCommande = () => {
          const [bonsCommandes,setBonCommandes] = useState([])
          const [dateLiv,setDateLiv] = useState('')
          const [open, setOpen] = useState(false);
-         const [pdv,setPdv] = useState([]);
+         const [pdv,setPdv] = useState({});
          const handleOpen = () => setOpen(true);
          const handleClose = () => setOpen(false);
          const handleCreateLivraison = (async () => {
@@ -57,7 +57,13 @@ const AddCommande = () => {
 
           const getPdv = async () => {
             try{
-              const response = await axios.get(`http://localhost:3000/api/v1/pointsVentes/${authCtx.id}`)
+              const response = await axios.get(`http://localhost:3000/api/v1/pointsVentes/${authCtx.id}`,{
+                withCredentials: true,
+                headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+                }
+              })
               setPdv(response.data)
             }catch(err){
 
@@ -170,7 +176,8 @@ const AddCommande = () => {
                    const bons = response.data.map((bon) => ({
                      idBonCommande:bon.idBonCommande,
                      dateLivraison:bon.dateLivraison,
-                     type:bon.type
+                     type:bon.type,
+                     checked: bon.checked
                    }));
                    setBonCommandes(bons)
                }
@@ -186,8 +193,8 @@ const AddCommande = () => {
             getPdv();
           },[])
           useEffect(() => {
-            console.log("testMAhboul:",bonsCommandes)
-          },[bonsCommandes])
+            console.log("testMAhboul:",pdv)
+          },[pdv])
 
           useEffect(() => {
             async function fetchUserName() {
@@ -345,10 +352,20 @@ const AddCommande = () => {
       <Box 
       sx={{
          marginLeft:25,
+         background: colors.primary[400],
+        alignItems:"center",
+         borderRadius:2,
+         width: 500,
+         display:"flex",
+         justifyContent:"center",
+         flexDirection:"column",
+         paddingTop:4,
+         paddingBottom:4,
+         paddingLeft:3
          
       }}
-      display="flex"
-      flexDirection="column"
+     
+  
       gap={5}
       >
          {
@@ -360,7 +377,8 @@ const AddCommande = () => {
                id={bon.idBonCommande}
              index={index} 
              date={bon.dateLivraison}
-             type={bon.type} />
+             type={bon.type}
+             checked={bon.checked} />
          ))
          }
          
@@ -373,7 +391,7 @@ const AddCommande = () => {
         }} 
         aria-label="add" 
         onClick={handleOpen} 
-        disabled={bonsCommandes.length === 2 && pdv.allowSuite==true}
+        disabled={(bonsCommandes.length === 2) || ((pdv[0]?.allowSuite === false) && (bonsCommandes.length === 1))}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

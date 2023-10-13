@@ -6,10 +6,10 @@ import axios from "axios";
 import Stock from "../stock";
 import { Navigate, redirect, useNavigate } from "react-router-dom";
 import { tokens } from "../../theme";
-import { Box, Paper, Typography, Button,useTheme } from '@mui/material';
+import { Box, Paper, Typography, Button,useTheme, IconButton } from '@mui/material';
 import  BarChart  from '../../components/barChart2'
-import {XYPlot, LineSeries,VerticalGridLines,HorizontalGridLines,XAxis,YAxis} from 'react-vis';
-
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 
 const Home = () => 
 
@@ -24,18 +24,58 @@ const Home = () =>
     role = role.replace(/_/g, ' ');
     const [stock,setStock] = useState([]);
     const [commande,setCommande] = useState([]);
-    const data = [
-      {x: 0, y: 8},
-      {x: 1, y: 5},
-      {x: 2, y: 4},
-      {x: 3, y: 9},
-      {x: 4, y: 1},
-      {x: 5, y: 7},
-      {x: 6, y: 6},
-      {x: 7, y: 3},
-      {x: 8, y: 2},
-      {x: 9, y: 0}
-    ];
+    const [data,setData] = useState([])
+    const today = new Date()
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1; // Adding 1 to get the correct month
+    
+    // Format the month as two digits (e.g., '01' for January, '12' for December)
+    const formattedMonth = month < 10 ? `0${month}` : `${month}`;
+    
+    // Combine year and month as 'YYYY-MM' string
+    const initialDate = `${year}-${formattedMonth}`;
+
+    
+    const [date, setDate] = useState(initialDate);
+
+
+    
+    
+    // Helper function to increment or decrement the month
+    const changeMonth = (increment) => {
+      const [currentYear, currentMonth] = date.split('-').map(Number);
+  
+      let newYear = currentYear;
+      let newMonth = currentMonth + (increment ? 1 : -1);
+  
+      // Handle the case where the month goes beyond December or before January
+      if (newMonth > 12) {
+        newMonth = 1;
+        newYear += 1;
+      } else if (newMonth < 1) {
+        newMonth = 12;
+        newYear -= 1;
+      }
+  
+      // Format the new month as two digits
+      const newFormattedMonth = newMonth < 10 ? `0${newMonth}` : `${newMonth}`;
+  
+      // Update the date state with the new values
+      setDate(`${newYear}-${newFormattedMonth}`);
+    };
+
+      // Function to increment the month
+  const handleMonthIncrement = () => {
+    changeMonth(true);
+  };
+
+  // Function to decrement the month
+  const handleMonthDecrement = () => {
+    changeMonth(false);
+  };
+    
+ 
+  
     const checkStock = async ()=>{
       try{
         const response = await axios.get('http://localhost:3000/api/v1/stocks', {
@@ -84,7 +124,10 @@ const Home = () =>
       checkStock()
       checkCommande()
     },[])
+
+  
     
+
     const message = 'Hello, ' + role
 
     const handleCreateStock = async () => {
@@ -107,12 +150,12 @@ const Home = () =>
         navigate('/commande');
       };
       return(
-      <>
+      <Box>
         <Box m="50px" >
             <Header title={message} subtitle={name} />
         </Box>
       
-        { stock.length == 0 &&
+      { stock.length == 0 &&
           <Box>
         <Paper 
           elevation={3}
@@ -151,10 +194,70 @@ const Home = () =>
         </Box>
       }
       
-      <Box height="75vh">
-        <BarChart />
+      <Box height="75vh" sx={{
+        background:colors.primary[500]
+      }}>
+        <Box 
+          sx={{
+            
+            
+            mt:3,
+            display:'flex',
+            gap:1,
+            justifyContent:'center',
+            marginRight:15,
+            padding:1,
+            borderRadius:1
+          }}
+        >
+          <IconButton sx={{
+            background:colors.primary[400],
+            color:colors.primary[100],
+            '&:hover':{
+              background:colors.pinkAccent[400],
+              color:colors.primary[100],
+            },
+            padding:1,
+            borderRadius:3
+          }}
+          onClick={handleMonthDecrement}
+          >
+            <ArrowBackIosIcon />
+          </IconButton>
+          <Paper 
+          variant="elevation"
+          sx={{
+            background:colors.primary[400],
+            color:colors.primary[100],
+            borderRadius:2,
+            minWidth:80,
+          }}
+          >
+            <Typography sx={{
+              margin:2
+            }}>
+              {date}
+            </Typography>
+          </Paper>
+          <IconButton sx={{
+            background:colors.primary[400],
+            color:colors.primary[100],
+            '&:hover':{
+              background:colors.pinkAccent[400],
+              color:colors.primary[100],
+            },
+            borderRadius:3
+          }}
+          onClick={handleMonthIncrement}
+          >
+            <ArrowForwardIosIcon />
+          </IconButton>
+        </Box>
+        <BarChart
+        date={date}
+        />
       </Box>
-    </>
+    </Box>
 
     );
     

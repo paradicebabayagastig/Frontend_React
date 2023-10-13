@@ -11,6 +11,7 @@ import axios from "axios"
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 const BonFabrications = () => {
   const authCtx = useContext(AuthContext)
   const role = authCtx.role
@@ -64,21 +65,29 @@ const BonFabrications = () => {
   const columns = [
     {
       id:1,
-      field: "idFabrication",
-      headerName: "id Fabrication",
+      field: "reference",
+      headerName: "reference",
+      flex: 1,
+      cellClassName: "name-column--cell",
+      
+    },
+    {
+      id:2,
+      field: "date",
+      headerName: "date",
       flex: 1,
       cellClassName: "name-column--cell",
       
     },
    
     {
-      id:2,
+      id:3,
       field: "chef",
       headerName: "Chef Glacier",
       flex: 1,
     },
     {
-      id:3,
+      id:4,
       field: "isValid",
       headerName: "Validation",
       flex: 1,
@@ -124,7 +133,7 @@ const BonFabrications = () => {
             }}
             >
           
-                <RemoveRedEyeIcon />
+                <MoreVertIcon />
             
             </IconButton>
             
@@ -161,8 +170,10 @@ const BonFabrications = () => {
               });
               const orderWithUserName = {
                 idFabrication: order.idFabrication,
+                reference: order.reference,
                 chef: userResponse.data.nomUtilisateur,
-                isValid: order.validationFabrication
+                isValid: order.validationFabrication,
+                date: order.dateFabrication.split('T')[0]
 
               };
 
@@ -230,7 +241,6 @@ const BonFabrications = () => {
         rows={data} 
         getRowId={(row)=>row.idFabrication}
         columns={columns}
-        checkboxSelection
         onSelectionModelChange={handleSelectionChange}
         components={{ Toolbar: GridToolbar }}
         />

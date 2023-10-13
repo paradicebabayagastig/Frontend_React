@@ -1,4 +1,4 @@
-import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -56,6 +56,7 @@ const LivraisonInfo = () => {
               orderItemId: orderItem.idOrderItem,
               produit: produitResponse.data.nomProduit,
               class:produitResponse.data.class,
+              type:produitResponse.data.type,
               quantity: orderItem.quantity,
               suiteCommande:orderItem.suiteCommande,
               ecart:orderItem.ecart,
@@ -65,27 +66,12 @@ const LivraisonInfo = () => {
               };
               return order
             }))
-            return initialQuantities
-            
-          
-      
-            
-              
+            return initialQuantities  
             }));  
             const flattenedOrders = orders.flatMap((orderArray) => orderArray);  
             console.log("response : ",flattenedOrders)
             console.log("initial quantities:", flattenedOrders);
-    
-            /* The line `const updatedProducts = [{}].concat(initialQuantities);` is creating a new
-            array called `updatedProducts` by concatenating an empty object `{}` with the
-            `initialQuantities` array. This is done to add an empty object as the first element of
-            the array, which can be useful in certain scenarios. */
-            // const updatedProducts = [{}].concat(initialQuantities);
-      
             setData(flattenedOrders);
-    
-            
-            // console.log("products after state update:", products);
           }
        
           catch(err) {
@@ -98,18 +84,6 @@ const LivraisonInfo = () => {
     
     fetchData()
   },[])
-
-  // useEffect(() => {
-  //   const initialQuantities = [{}]
-  //     data.map((produit) => (
-  //       initialQuantities.push({
-  //         productId:produit.idProduit,
-  //         quantity:0,
-  //         unite:"BAC5"
-  //       })
-  //     ))
-  //     setProducts(initialQuantities)
-  // },[data])
   useEffect(() => {
     console.log("data changed! :",data);
   
@@ -129,65 +103,8 @@ const LivraisonInfo = () => {
       navigate('/commande');
     }
   }, [redirect, navigate]);
-
-//   const handleChange = (productId) => (event) =>{
-//     let newQuantity = event.target.value;
-//     newQuantity = parseInt(newQuantity)
-//     console.log("Updating quantity for product", productId, "to", newQuantity);
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],quantity:newQuantity}
-//     }));
-// //   }
-//   const handleUnitChange = (productId) => (event) => {
-//     let newUnit = event.target.value;
-//     console.log(newUnit)
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],unite:newUnit}
-//     }));
-
-//   }
-
-//   const handleSubmit = () => {
-//     console.log(products)
-//     Object.keys(products).forEach( index => {
-//       if (index !== 0) {
-//         console.log(`Product ID: ${products[index].productId}, Quantity: ${products[index].quantity}`);
-        
-//         axios.post('http://localhost:3000/api/v1/orderItem', {
-//           bonCommandeId: bonCommandeId,
-//           produitId: parseInt(products[index].productId),
-//           quantity: products[index].quantity,
-//           unite: products[index].unite
-//         }, { withCredentials: true })
-//         .then((response) => {
-//           console.log(response);
-//         })
-//         .catch((err) => {
-//           console.log(err);
-//           setAllgood(false); // Set allGood to false if any error occurs
-//         });
-//       }
-//     });
-  
-//     if (allgood) {
-//       setLoading(true);
-//       setTimeout(() => {
-//         setSuccess(true);
-//       }, 3000);
-//     }
-//   };
-  
-
   const columns = [
-    {
-      id:1,
-      field: "orderItemId",
-      headerName: "id",
-      flex: 1,
-      
-    },
+   
     {
       id:2,
       field: "produit",
@@ -234,6 +151,17 @@ const LivraisonInfo = () => {
       field: "class",
       headerName: "class",
       flex: 1,
+      renderCell: (params) => {
+        <Box 
+        sx={{
+          display:"flex",
+          gap:2
+        }}
+        >
+          <Typography>zeb</Typography>
+          <Typography>zeb2</Typography>
+        </Box>
+      } 
 
     },
    
@@ -296,7 +224,6 @@ const LivraisonInfo = () => {
         }}
       >
         <DataGrid
-        checkboxSelection
         rows={data}
         columns={columns}
         getRowId={(row)=>row.orderItemId}
