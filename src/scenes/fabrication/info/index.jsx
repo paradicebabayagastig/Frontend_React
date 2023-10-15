@@ -1,4 +1,4 @@
-import { Alert, Box, Chip, CircularProgress, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, Box, Chip, CircularProgress, Icon, IconButton, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -9,11 +9,17 @@ import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
 import PrintIcon from '@mui/icons-material/Print';
+import { useReactToPrint } from 'react-to-print'
+import React from "react";
 
 const FabricationInfo = () => {
    
       const params = useParams();
       const bonfabricationId = parseInt(params.id);
+      const componentRef = React.useRef();
+      const handlePrint = useReactToPrint({
+        content: () => componentRef.current,
+      });
         const authCtx = useContext(AuthContext)
         const token = authCtx.isAuthenticated;
         const role = authCtx.role
@@ -217,7 +223,7 @@ const FabricationInfo = () => {
     }
     ];
   return (
-    <Box m="20px">
+    <Box m="20px" ref={componentRef}>
       {loading && (
         <Box sx={{
           position: 'fixed',
@@ -241,18 +247,17 @@ const FabricationInfo = () => {
       ) }
       <Box display="flex">
       <Header title={message} />
-      <Chip 
+      <IconButton 
+      onClick={handlePrint}
       sx={{
           marginLeft:'auto',
-          background: colors.primary[400],
           "&:hover":{
-            background: colors.pinkAccent[400]
+            background:'FFFFFF',
+            color: colors.pinkAccent[400]
           },
-          padding: 3
-      }}
-      clickable
-      icon={<PrintIcon />} 
-      label="Imprimer" />
+      }} >
+        <PrintIcon />
+      </IconButton>
 
         
       </Box>
@@ -300,6 +305,8 @@ const FabricationInfo = () => {
           "& .MuiDataGrid-footerContainer": {
             borderTop: "none",
             backgroundColor: colors.primary[400],
+            display:'block',
+            '@media print' : {display : "none"}
           },
           "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
             color: `${colors.grey[100]} !important`,
