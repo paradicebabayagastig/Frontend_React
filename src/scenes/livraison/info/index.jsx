@@ -1,4 +1,4 @@
-import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, Box, CircularProgress, Icon, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -8,165 +8,259 @@ import {AuthContext} from "../../../contexts/Auth"
 import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
+import EditIcon from '@mui/icons-material/Edit';
 
 const LivraisonInfo = () => {
    
       const params = useParams();
       const commandeId = parseInt(params.id);
-      console.log(commandeId);
         const authCtx = useContext(AuthContext)
         const token = authCtx.isAuthenticated;
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
-        const [data,setData] = useState([]);
-        // const [products,setProducts] = useState([])
-        const [loading, setLoading] = useState(false);
-        const [success, setSuccess] = useState(false);
-        const [redirect, setRedirect] = useState(false);
-        const [allgood,setAllgood] = useState(true)
-        const navigate = useNavigate();
+        const [aggregatedData, setAggregatedData] = useState({
+          FOURNITURE: [],
+          KG: [],
+          SUITE: [],
+        });
+        const [loading, setLoading] = useState(true);
 
-        const message = ("Information bon livraison n°"+ commandeId )
+        const message = ("Information commande")
         async function fetchData() {
           try {
-            const bcResponse = await axios.get(`http://localhost:3000/api/v1/bons-commandes/commande/${commandeId}`, {
-              withCredentials: true,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+            const bonCommandeResponse = await axios.get(
+              `http://localhost:3000/api/v1/bons-commandes/commande/${commandeId}`,
+              {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
               }
-            })
-            const orders = await Promise.all(bcResponse.data.map(async (bonCommande) => {
-              const response = await axios.get(`http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`, {
-              withCredentials: true,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            const initialQuantities = await Promise.all(response.data.map( async (orderItem) => {
-              const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${orderItem.produitId}`,{
-                  withCredentials: true,
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+            );
+        
+            // Initialize categorized orders
+            const categorizedOrders = {
+              FOURNITURE: {},
+              KG: {},
+              SUITE: {},
+            };
+        
+            await Promise.all(
+              bonCommandeResponse.data.map(async (bonCommande) => {
+                const orderItemsResponse = await axios.get(
+                  `http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`,
+                  {
+                    withCredentials: true,
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    }
                   }
-                } )
-              const order = {
-              orderItemId: orderItem.idOrderItem,
-              produit: produitResponse.data.nomProduit,
-              class:produitResponse.data.class,
-              type:produitResponse.data.type,
-              quantity: orderItem.quantity,
-              suiteCommande:orderItem.suiteCommande,
-              ecart:orderItem.ecart,
-              QteLivre:orderItem.QteLivre,
-              feedback:orderItem.feedback,
-              unite: orderItem.unite
-              };
-              return order
-            }))
-            return initialQuantities  
-            }));  
-            const flattenedOrders = orders.flatMap((orderArray) => orderArray);  
-            console.log("response : ",flattenedOrders)
-            console.log("initial quantities:", flattenedOrders);
-            setData(flattenedOrders);
-          }
-       
-          catch(err) {
-            console.log(err)
+                );
+        
+                for (const order of orderItemsResponse.data) {
+                  const type = order.type;
+                  const produitResponse = await axios.get(
+                    `http://localhost:3000/api/v1/produits/${order.produitId}`,
+                    {
+                      withCredentials: true,
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      }
+                    }
+                  );
+        
+                  const key = `${produitResponse.data.nomProduit}-${order.unite}`;
+        
+                  if (!categorizedOrders[type][key]) {
+                    categorizedOrders[type][key] = {
+                      id: order.idOrderItem,
+                      produit: produitResponse.data.nomProduit,
+                      class: produitResponse.data.class,
+                      type: produitResponse.data.type,
+                      unite: order.unite,
+                      ecart:order.ecart,
+                      QteLivre:order.QteLivre,
+                      feedback:order.feedback,
+                      quantity: order.quantity,
+                      suiteC: order.suiteCommande,
+                    };
+                  }
+                }
+              })
+            );
+        
+            // Convert categorized orders into arrays
+            const aggregatedQuantities = {
+              FOURNITURE: Object.values(categorizedOrders.FOURNITURE),
+              KG: Object.values(categorizedOrders.KG),
+              SUITE: Object.values(categorizedOrders.SUITE),
+            };
+        
+            console.log("Aggregated quantities for FOURNITURE:", aggregatedQuantities.FOURNITURE);
+            
+            console.log("Aggregated quantities for KG:", aggregatedQuantities.KG);
+            console.log("Aggregated quantities for SUITE:", aggregatedQuantities.SUITE);
+            setAggregatedData(aggregatedQuantities)
+          } catch (err) {
+            console.log(err);
           }
         }
-
+        
+          
         
   useEffect(()=>{
     
     fetchData()
   },[])
-  useEffect(() => {
-    console.log("data changed! :",data);
-  
-  }, [data]);
+
 
   useEffect(() => {
-    if (success) {
-      setLoading(false); // Turn off loading once successful
-      setTimeout(() => {
-        setRedirect(true); // After 2 seconds, set redirect to true
-      }, 2000);
-    }
-  }, [success]);
-
-  useEffect(() => {
-    if (redirect) {
-      navigate('/commande');
-    }
-  }, [redirect, navigate]);
+    console.log("data changed! :",aggregatedData);
+    setLoading(false)
+  }, [aggregatedData]);
   const columns = [
-   
     {
       id:2,
       field: "produit",
-      headerName: "produit",
+      headerName: <b>PRODUIT</b>,
       flex: 1,
+      cellClassName:"quantity-column--cell"
     },
     {
       id:3,
       field: "quantity",
-      headerName: "quantity",
-      flex: 1,
+      headerName: <b>QTE</b>,
+      flex: 0.5,
       cellClassName:"quantity-column--cell"
      
     },
     {
       id:4,
-      field: "suiteCommande",
-      headerName: "suiteC",
-      flex: 1,
+      field: "suiteC",
+      headerName: <b>SUITE C</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
 
     },
     {
-      id:8,
+      id:4,
+      field: "QteLivre",
+      headerName: <b>QTE LIVRAISON</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
+
+    },
+    {
+      id:4,
       field: "ecart",
-      headerName: "ecart",
-      flex: 1,
+      headerName: <b>ECART</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
 
     },
     {
-      id:5,
-      field:"QteLivre",
-      headerName:"QteLivre",
-      flex:1,
-    }, 
-    {
-      id:6,
+      id:4,
       field: "feedback",
-      headerName: "feedback",
-      flex: 1,
-
-    },  
-    {
-      id:7,
-      field: "class",
-      headerName: "class",
-      flex: 1,
-      renderCell: (params) => {
-        <Box 
-        sx={{
-          display:"flex",
-          gap:2
-        }}
-        >
-          <Typography>zeb</Typography>
-          <Typography>zeb2</Typography>
-        </Box>
-      } 
+      headerName: <b>FEEDBACK</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
 
     },
-   
+
     ];
+    const Folumns = [
+      {
+        id:1,
+        field: "produit",
+        headerName: <b>PRODUIT</b>,
+        flex: 1,
+        cellClassName:"quantity-column--cell"
+      },
+      {
+        id:2,
+        field: "quantity",
+        headerName: <b>QTE</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+       
+      },
+      {
+        id:3,
+        field: "QteLivre",
+        headerName: <b>QTE LIVRAISON</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
   
+      },
+      {
+        id:4,
+        field: "ecart",
+        headerName: <b>ECART</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+  
+      },
+      {
+        id:5,
+        field: "feedback",
+        headerName: <b>FEEDBACK</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+  
+      },
+      ];
+      const Kolumns = [
+        {
+          id:1,
+          field: "produit",
+          headerName: <b>PRODUIT</b>,
+          flex: 1,
+          cellClassName:"quantity-column--cell"
+        },
+        {
+          id:2,
+          field: "quantity",
+          headerName: <b>QTE</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+         
+        },
+        {
+          id:3,
+          field: "unite",
+          headerName: <b>UNITE</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+         
+        },
+        {
+          id:4,
+          field: "QteLivre",
+          headerName: <b>QTE LIVRAISON</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+    
+        },
+        {
+          id:5,
+          field: "ecart",
+          headerName: <b>ECART</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+    
+        },
+        {
+          id:6,
+          field: "feedback",
+          headerName: <b>FEEDBACK</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+    
+        },
+        ];
   return (
     <Box m="20px">
       {loading && (
@@ -190,7 +284,37 @@ const LivraisonInfo = () => {
           />
         </Box>
       ) }
-      <Header title={message}  />
+      <Box
+      display="flex"
+      justifyContent="space-between"
+      >
+        <Header title={message}  />
+        <Button sx={{
+          color:colors.primary[100],
+          marginRight:5,
+          backgroundColor:colors.primary[400],
+          display:"flex",
+          justifyContent:"center",
+          marginRight:5,
+          marginBottom:5,
+          gap:1.5,
+          "&:hover":{
+            backgroundColor:colors.pinkAccent[400]
+          }
+        }}>
+         
+          <Typography>
+          <b>Modifier</b>
+          </Typography>
+          <Icon sx={{
+            marginBottom:1.5
+          }}>
+            <EditIcon />
+          </Icon>
+          </Button>
+          
+      </Box>
+      
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -221,25 +345,33 @@ const LivraisonInfo = () => {
           "& .MuiCheckbox-root": {
             color: `${colors.pinkAccent[200]} !important`,
           },
+          
         }}
       >
         <DataGrid
-        rows={data}
+        editMode="row"
+        rows={aggregatedData.SUITE}
         columns={columns}
-        getRowId={(row)=>row.orderItemId}
+        getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         />
+         <DataGrid
+        editMode="row"
+        rows={aggregatedData.KG}
+        columns={Folumns}
+        getRowId={(row)=>row.id}
+        components={{ Toolbar: GridToolbar }}
+        />
+         <DataGrid
+        rows={aggregatedData.FOURNITURE}
+        columns={Kolumns}
+        getRowId={(row)=>row.id}
+        components={{ Toolbar: GridToolbar }}
+        editMode="row"
+        />
       </Box>
-      <Snackbar open={success} autoHideDuration={2000}>
-        <Alert sx={{
-          position: 'fixed',
-          bottom: '50px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}  severity="success">Operation Successful! Redirecting...</Alert>
-      </Snackbar>
     </Box>
-  );
+);
 };
 
 export default LivraisonInfo;

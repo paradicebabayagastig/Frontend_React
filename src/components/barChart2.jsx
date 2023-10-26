@@ -43,9 +43,18 @@ const BarChart = ({date}) => {
                 'Content-Type': 'application/json', 
               }
             })
+            const pertes = await axios.get(`http://localhost:3000/api/v1/stats/pertes/?startDate=${startDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`,{
+              withCredentials:true,
+              headers: {
+                'Content-Type': 'application/json', 
+              }
+            })
             const stat = {
               index:point.nomPointVente,
-              "P. commandé": orderItem.data
+              "orders": orderItem.data,
+              "ordersColor":"blue",
+              "lost": pertes.data,
+              "lostColor":"hsl(229, 70%, 50%)"
             }
             return stat
           }))
@@ -127,13 +136,13 @@ const BarChart = ({date}) => {
           },
         },
       }}
-      keys={["P. commandé", "P. fabriqués", "P. perdus"]}
+      keys={["orders", "lost"]}
       indexBy="index"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}
       valueScale={{ type: "linear" }}
       indexScale={{ type: "band", round: true }}
-      colors={{ scheme: "nivo" }}
+      // colors={{ scheme: "nivo" }}
       defs={[
         {
           id: "dots",

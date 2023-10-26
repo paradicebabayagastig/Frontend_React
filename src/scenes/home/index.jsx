@@ -3,13 +3,14 @@ import { useEffect,useContext, useState } from "react";
 import Header from "../../components/Header";
 import IceCreamCard from "../../components/flavorCard";
 import axios from "axios";
-import Stock from "../stock";
-import { Navigate, redirect, useNavigate } from "react-router-dom";
+import pertes from "../pertes";
+import { Link, Navigate, redirect, useNavigate } from "react-router-dom";
 import { tokens } from "../../theme";
 import { Box, Paper, Typography, Button,useTheme, IconButton } from '@mui/material';
 import  BarChart  from '../../components/barChart2'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const Home = () => 
 
@@ -22,7 +23,7 @@ const Home = () =>
     const colors = tokens(theme.palette.mode);
     role = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
     role = role.replace(/_/g, ' ');
-    const [stock,setStock] = useState([]);
+    const [pertes,setpertes] = useState([]);
     const [commande,setCommande] = useState([]);
     const [data,setData] = useState([])
     const today = new Date()
@@ -76,24 +77,24 @@ const Home = () =>
     
  
   
-    const checkStock = async ()=>{
+    const checkpertes = async ()=>{
       try{
-        const response = await axios.get('http://localhost:3000/api/v1/stocks', {
+        const response = await axios.get('http://localhost:3000/api/v1/pertes', {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json', 
           }
         })
-          const allStocks = response.data;
+          const allpertess = response.data;
           const today = new Date().toISOString();
-          const filteredStocks = allStocks.filter(stock => 
-            stock.pointVenteId == authCtx.id && stock.dateStock.slice(0,10) == today.slice(0,10)
+          const filteredpertess = allpertess.filter(pertes => 
+            pertes.pointDeVenteId === authCtx.id && pertes.datePerte.slice(0,10) === today.slice(0,10)
           );
-          console.log("today",today.slice(0,10));
-        setStock(filteredStocks);
+          console.log("today",filteredpertess);
+        setpertes(filteredpertess);
         
       }catch(error) {
-          console.error('Error fetching stocks:', error);
+          console.error('Error fetching pertess:', error);
       }
       
     }
@@ -109,19 +110,19 @@ const Home = () =>
           const allCommandes = response.data;
           const today = new Date().toISOString();
           const filteredCommandes = allCommandes.filter(commande => 
-            commande.idPointVente == authCtx.id && commande.dateCommande.slice(0,10) == today.slice(0,10)
+            commande.idPointVente === authCtx.id && commande.dateCommande.slice(0,10) === today.slice(0,10)
           );
           console.log("today",today.slice(0,10));
         setCommande(filteredCommandes);
         
       }catch(error) {
-          console.error('Error fetching stocks:', error);
+          console.error('Error fetching pertess:', error);
       }
       
     }
 
     useEffect(()=>{
-      checkStock()
+      checkpertes()
       checkCommande()
     },[])
 
@@ -129,23 +130,6 @@ const Home = () =>
     
 
     const message = 'Hello, ' + role
-
-    const handleCreateStock = async () => {
-        const today = new Date().toISOString();
-
-        try{
-        const response = await axios.post('http://localhost:3000/api/v1/stocks', {
-            pointVenteId: authCtx.id,
-            dateStock: today,
-        })
-        console.log(response)
-          const newStockId = parseInt(response.data.idStock); 
-          navigate(`/stock/${newStockId}`);
-      }catch(error){
-          console.error('Error creating stock:', error);
-      }
-      };
-
       const handleCreateCommande =()=>{
         navigate('/commande');
       };
@@ -154,46 +138,105 @@ const Home = () =>
         <Box m="50px" >
             <Header title={message} subtitle={name} />
         </Box>
-      
-      { stock.length == 0 &&
-          <Box>
-        <Paper 
-          elevation={3}
-          sx={{
-            margin:"50px",
-            padding: theme.spacing(2),
-            backgroundColor: colors.primary[400], // Transparent white background
-            maxWidth: '400px',
-          }}>
-          <Typography variant="body1">
-            Vous n'avez pas créé de stock pour aujourd'hui.
-          </Typography>
-          <Button variant="contained" color="primary" onClick={handleCreateStock}>
-            Créer un stock
-          </Button>
-        </Paper>
-        </Box>
+      {
+        (role === 'Point de vente') && (
+          <Box display="flex" justifyContent="center">
+          { pertes.length === 0? 
+              <Box>
+            <Paper 
+              elevation={3}
+              sx={{
+                display:'flex',
+                flexDirection:'column',
+                justifyContent:'center',
+                margin:"50px",
+                padding: theme.spacing(2),
+                backgroundColor: colors.primary[400], // Transparent white background
+                maxWidth: '400px',
+              }}>
+              <Typography variant="body1">
+                Vous n'avez pas créé vos pertes pour aujourd'hui :{"("}
+              </Typography>
+              <Link to='/pertes'>
+              <Button variant="contained" sx={{
+                backgroundColor:colors.pinkAccent[400],
+                width:300,
+                marginTop:5,
+              }}>
+                Remplir Pertes
+              </Button>
+              </Link>
+              
+            </Paper>
+            </Box>:<Box>
+            <Paper 
+              elevation={3}
+              sx={{
+                display:'flex',
+                flexDirection:'column',
+                justifyContent:'center',
+                margin:"50px",
+                padding: theme.spacing(2),
+                backgroundColor: colors.primary[400], // Transparent white background
+                maxWidth: '400px',
+              }}>
+                <CheckCircleIcon sx={{
+                  fontSize:'50px',
+                  margin:'10px 100px 10px 100px'
+                }} />
+              <Typography variant="body1"> Vous avez créé vos pertes pour aujourd'hui!</Typography>
+            </Paper>
+            </Box>
+          }
+          { commande.length === 0?
+              <Box>
+            <Paper 
+              elevation={3}
+              sx={{
+                display:'flex',
+                flexDirection:'column',
+                justifyContent:'center',
+                margin:"50px",
+                padding: theme.spacing(2),
+                backgroundColor: colors.primary[400], // Transparent white background
+                maxWidth: '400px',
+              }}>
+              <Typography variant="body1">
+                Vous n'avez pas créé une Commande pour aujourd'hui :{"("}
+              </Typography>
+              <Button variant="contained" sx={{
+                marginTop:5,
+                backgroundColor:colors.pinkAccent[400]
+              }} onClick={handleCreateCommande}>
+                Créer une commande
+              </Button>
+            </Paper>
+            </Box>:<Box>
+            <Paper 
+              elevation={3}
+              sx={{
+                display:'flex',
+                flexDirection:'column',
+                justifyContent:'center',
+                margin:"50px",
+                padding: theme.spacing(2),
+                backgroundColor: colors.primary[400], // Transparent white background
+                maxWidth: '400px',
+              }}>
+                <CheckCircleIcon sx={{
+                  fontSize:'50px',
+                  margin:'10px 100px 10px 100px'
+                }} />
+              <Typography variant="body1"> Votre commande d'aujourd'hui est enregistrée.</Typography>
+            </Paper>
+            </Box>
+          }
+    
+          </Box>
+        )
       }
-      { commande.length == 0 &&
-          <Box>
-        <Paper 
-          elevation={3}
-          sx={{
-            margin:"50px",
-            padding: theme.spacing(2),
-            backgroundColor: colors.primary[400], // Transparent white background
-            maxWidth: '400px',
-          }}>
-          <Typography variant="body1">
-            Vous n'avez pas créé une Commande pour aujourd'hui.
-          </Typography>
-          <Button variant="contained" color="primary" onClick={handleCreateCommande}>
-            Créer une commande
-          </Button>
-        </Paper>
-        </Box>
-      }
-      
+     
+            
       <Box height="75vh" sx={{
         background:colors.primary[500]
       }}>

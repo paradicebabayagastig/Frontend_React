@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -43,7 +43,30 @@ const AdminSidebar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selected, setSelected] = useState("Dashboard");
+   // Get the current location
+   const location = useLocation();
+
+   // Determine the selected item based on the current route
+   const currentPath = location.pathname;
+   let currentSelected = "Dashboard";
+ 
+   if (currentPath === "/") {
+     currentSelected = "Dashboard";
+   } else if (currentPath === "/contacts") {
+     currentSelected = "Contacts Information";
+   } else if (currentPath === "/commande") {
+     currentSelected = "Bons De Commande";
+   } else if (currentPath === "/produits") {
+     currentSelected = "Produits";
+   } else if (currentPath === "/form") {
+     currentSelected = "create account";
+   } else if (currentPath === "/pointsVentes") {
+     currentSelected = "points de ventes";
+     // Add more conditions for other routes as needed
+   }
+ 
+   const [selected, setSelected] = useState(currentSelected);
+ 
 
   return (
     <Box

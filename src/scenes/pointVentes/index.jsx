@@ -4,7 +4,7 @@ import { AccordionDetails, AccordionSummary, Box, Checkbox, Typography} from "@m
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import axios from "axios";
-import Stock from "../stock";
+import pertes from "../pertes";
 import { redirect } from "react-router-dom";
 import {Accordion, useTheme} from "@mui/material"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"

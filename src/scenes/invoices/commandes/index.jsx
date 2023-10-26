@@ -1,4 +1,4 @@
-import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Alert, Box, CircularProgress, Icon, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -8,6 +8,7 @@ import {AuthContext} from "../../../contexts/Auth"
 import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
+import EditIcon from '@mui/icons-material/Edit';
 
 const CommandeInfo = () => {
    
@@ -22,11 +23,9 @@ const CommandeInfo = () => {
           KG: [],
           SUITE: [],
         });
-        // const [products,setProducts] = useState([])
         const [loading, setLoading] = useState(true);
-        const navigate = useNavigate();
 
-        const message = ("Information commande n°"+ commandeId )
+        const message = ("Information commande")
         async function fetchData() {
           try {
             const bonCommandeResponse = await axios.get(
@@ -82,6 +81,9 @@ const CommandeInfo = () => {
                       class: produitResponse.data.class,
                       type: produitResponse.data.type,
                       unite: order.unite,
+                      ecart:0,
+                      QteLivre:0,
+                      feedback:0,
                       quantity: 0,
                       suiteC: 0,
                     };
@@ -89,6 +91,9 @@ const CommandeInfo = () => {
         
                   categorizedOrders[type][key].quantity += order.quantity;
                   categorizedOrders[type][key].suiteC += order.suiteCommande;
+                  categorizedOrders[type][key].ecart += order.ecart;
+                  categorizedOrders[type][key].QteLivre += order.QteLivre;
+                  categorizedOrders[type][key].feedback += order.QteLivre;
                 }
               })
             );
@@ -212,7 +217,37 @@ const CommandeInfo = () => {
           />
         </Box>
       ) }
-      <Header title={message}  />
+      <Box
+      display="flex"
+      justifyContent="space-between"
+      >
+        <Header title={message}  />
+        <Button sx={{
+          color:colors.primary[100],
+          marginRight:5,
+          backgroundColor:colors.primary[400],
+          display:"flex",
+          justifyContent:"center",
+          marginRight:5,
+          marginBottom:5,
+          gap:1.5,
+          "&:hover":{
+            backgroundColor:colors.pinkAccent[400]
+          }
+        }}>
+         
+          <Typography>
+          <b>Modifier</b>
+          </Typography>
+          <Icon sx={{
+            marginBottom:1.5
+          }}>
+            <EditIcon />
+          </Icon>
+          </Button>
+          
+      </Box>
+      
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -247,25 +282,25 @@ const CommandeInfo = () => {
         }}
       >
         <DataGrid
-        
+        editMode="row"
         rows={aggregatedData.SUITE}
         columns={columns}
         getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         />
          <DataGrid
-        
+        editMode="row"
         rows={aggregatedData.KG}
         columns={Folumns}
         getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         />
          <DataGrid
-       edit
         rows={aggregatedData.FOURNITURE}
         columns={Kolumns}
         getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
+        editMode="row"
         />
       </Box>
     </Box>

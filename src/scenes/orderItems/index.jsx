@@ -31,6 +31,10 @@ const AddBon = () => {
         const [open, setOpen] = useState(false);
         const handleOpen = () => setOpen(true);
         const handleClose = () => setOpen(false);
+        const [suite,setSuite] = useState([])
+        const [kilo,setKilo] = useState([])
+        const [fourniture,setFourniture] = useState([])
+
         const style = {
           position: 'absolute',
           top: '50%',
@@ -53,25 +57,61 @@ const AddBon = () => {
                 'Authorization': `Bearer ${token}`
               }
             });
-
-            const availableProducts = response.data.filter((produit) => produit.availability === true);      
-
-            const initialQuantities = availableProducts.map((produit,index) => ({
-              index:index,
-              idProduit: produit.idProduit,
-              produit:produit.nomProduit,
-              class:produit.class,
-              type:produit.type,
-              quantity: 0,
-            }));
-            setData(initialQuantities);
-           
-          }
-       
-          catch(err) {
-            console.log(err)
+        
+            const availableProducts = response.data.filter((produit) => produit.availability === true);
+        
+            const suiteArray = [];
+            const kiloArray = [];
+            const fournitureArray = [];
+        
+            let suiteIndex = 0;
+            let kiloIndex = 0;
+            let fournitureIndex = 0;
+        
+            availableProducts.forEach((produit) => {
+              const idProduit = produit.idProduit;
+              const nomProduit = produit.nomProduit;
+              const classProduit = produit.class;
+              const typeProduit = produit.type;
+        
+              if (typeProduit === "PARFUM" && classProduit === "NORMAL") {
+                suiteArray.push({
+                  index: suiteIndex++,
+                  idProduit: idProduit,
+                  produit: nomProduit,
+                  class: classProduit,
+                  type: typeProduit,
+                  quantity: 0,
+                });
+              } else if (typeProduit === "PARFUM" && classProduit !== "NORMAL") {
+                kiloArray.push({
+                  index: kiloIndex++,
+                  idProduit: idProduit,
+                  produit: nomProduit + ' ' + classProduit,
+                  class: classProduit,
+                  type: typeProduit,
+                  quantity: 0,
+                });
+              } else if (typeProduit === "FOURNITURE") {
+                fournitureArray.push({
+                  index: fournitureIndex++,
+                  idProduit: idProduit,
+                  produit: nomProduit,
+                  class: classProduit,
+                  type: typeProduit,
+                  quantity: 0,
+                });
+              }
+            });
+            setSuite(suiteArray);
+            setKilo(kiloArray);
+            setFourniture(fournitureArray);
+          } catch (err) {
+            console.log(err);
           }
         }
+        
+      
 
         async function fetchSuite() {
           try {
@@ -99,7 +139,7 @@ const AddBon = () => {
               type:produit.type,
               suite: 0,
             }));
-            setData(initialQuantities);
+            setSuite(initialQuantities);
           }
        
           catch(err) {
@@ -123,95 +163,37 @@ const AddBon = () => {
           console.log(err);
         }
         }
-        async function getBonCommandeByCommandeId(){
-          try{
-             const response = await axios.get(`http://localhost:3000/api/v1/bons-commandes/commande/${currentBonCommande.commandeId}`,{
-                withCredentials: true,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                }
-              });
-
-             
-          const bons = response.data.filter((bon) => bon.idBonCommande !== currentBonCommande.idBonCommande);
-
-          // Fetch order items for the first boncommande in the filtered list (if any)
-          if (bons.length > 0) {
-            const firstBonCommandeId = bons[0].idBonCommande; // You can choose another boncommande if needed
-            const orderItemsResponse = await axios.get(
-              `http://localhost:3000/api/v1/orderItem/bonCommande/${firstBonCommandeId}`,
-              {
-                withCredentials: true,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                }
-              }
-            );
-
-            const orderItems = await Promise.all(orderItemsResponse.data.map(async(orderItem,index) => {
-              const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${orderItem.produitId}`,
-              {
-                withCredentials: true,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-              })
-              return {
-                idProduit: index+1,
-                idOrderItem: orderItem.idOrderItem,
-                class:produitResponse.data.class,
-                produit: produitResponse.data.nomProduit,
-                unite:orderItem.unite,
-                suite:orderItem.suiteCommande
-              }
-            }))
-            console.log("orders : ", orderItems)
-            setData(orderItems);
-          } else {
-            // Handle the case where no boncommande other than the current one was found
-            // You can set defaults or handle it as needed
-          }
-          }
-          catch(err){
-
-          }
-       }
-        
   useEffect(()=>{
     getBc()
   },[])
 
   useEffect(()=>{
-    if (currentBonCommande.type === 'SUITE') {
+    console.log(currentBonCommande)
+    if (currentBonCommande.type && currentBonCommande.type === 'SUITE') {
       fetchSuite()
+      console.log('suite kahaw')
     }
-    else {
+    else if (currentBonCommande.type && currentBonCommande.type === 'NORMAL' ) {
       fetchData()
+      console.log('lkol jew')
     }
     
   },[currentBonCommande])
 
-  useEffect(() => {
-    console.log('rayen',existingOrderItems)
-  },[existingOrderItems])
+  // useEffect(() => {
+  //   console.log('rayen',existingOrderItems)
+  // },[existingOrderItems])
 
   useEffect(() => {
-    console.log('data :',data)
-  },[data])  
-  // useEffect(() => {
-  //   const initialQuantities = [{}]
-  //     data.map((produit) => (
-  //       initialQuantities.push({
-  //         productId:produit.idProduit,
-  //         quantity:0,
-  //         unite:"BAC5"
-  //       })
-  //     ))
-  //     setProducts(initialQuantities)
-  // },[data])
+    console.log('suite :',suite)
+  },[suite])  
+  useEffect(() => {
+    console.log('kilo :',kilo)
+  },[kilo])  
+  useEffect(() => {
+    console.log('fourniture :',fourniture)
+  },[fourniture])  
+
   
 
   useEffect(() => {
@@ -229,22 +211,47 @@ const AddBon = () => {
     }
   }, [redirect, navigate]);
 
-  const handleChange = (index) => (event) =>{
+  const handleKiloChange = (index) => (event) => {
+    let newQuantity = event.target.value;
+    newQuantity = parseInt(newQuantity)
+    setKilo((prevKilo) => {
+      return prevKilo.map((item) => {
+        if (item.index === index) {
+          return { ...item, quantity:newQuantity   };
+        }
+        return item;
+      });
+    });
+  }
+  const handleFournitureChange = (index) => (event) => {
+    let newQuantity = event.target.value;
+    newQuantity = parseInt(newQuantity)
+    setFourniture((prevFourniture) => {
+      return prevFourniture.map((item) => {
+        if (item.index === index) {
+          return { ...item, quantity:newQuantity   };
+        }
+        return item;
+      });
+    });
+  }
+
+  const handleSuiteChange = (index) => (event) =>{
     let newQuantity = event.target.value;
     newQuantity = parseInt(newQuantity)
     if (currentBonCommande.type !== 'SUITE') {
-      setData((prevData) => {
-        return prevData.map((item) => {
-          if (item.index === index) {
-            return { ...item, quantity:newQuantity   };
-          }
-          return item;
+      setSuite((prevSuite) => {
+          return prevSuite.map((item) => {
+            if (item.index === index) {
+              return { ...item, quantity:newQuantity   };
+            }
+            return item;
+          });
         });
-      });
     }
     else {
-      setData((prevData) => {
-        return prevData.map((item) => {
+      setSuite((prevSuite) => {
+        return prevSuite.map((item) => {
           if (item.index === index) {
             return { ...item, suite:newQuantity   };
           }
@@ -255,27 +262,78 @@ const AddBon = () => {
     }
     
   }
-  const handleUnitChange = (index) => (event) => {
-    let newUnit = event.target.value;
-    
-    setData((prevData) => ({
-      ...prevData,
-      [index]: {...prevData[index],unite:newUnit}
-    }));
-
-  }
 
   const handleSubmit = async () => {
     if (currentBonCommande.type !== 'SUITE'
     ) {
-      Object.keys(data).forEach(async (index) => {
-        if ( (data[index].quantity !== 0)) {
+      Object.keys(suite).forEach(async (index) => {
+        if ( (suite[index].quantity !== 0)) {
           try {
             const createOrder = await axios.post('http://localhost:3000/api/v1/orderItem', {
             bonCommandeId: bonCommandeId,
-            produitId: parseInt(data[index].idProduit),
-            quantity: data[index].quantity,
-            unite: data[index].unite
+            produitId: parseInt(suite[index].idProduit),
+            quantity: suite[index].quantity,
+            unite: suite[index].unite
+          }, {
+             withCredentials: true,
+             headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+            })
+          const newOrderId = createOrder.data.idOrderItem
+          console.log(newOrderId)
+          const createFabrication = await axios.put(`http://localhost:3000/api/v1/fabItem/${newOrderId}`,{
+            withCredentials:true,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          console.log(createFabrication)
+          }
+          catch (err) {console.log(err)}
+        }
+      }); 
+      /********************************************************************************************************** */
+      Object.keys(kilo).forEach(async (index) => {
+        if ( (kilo[index].quantity !== 0)) {
+          try {
+            const createOrder = await axios.post('http://localhost:3000/api/v1/orderItem', {
+            bonCommandeId: bonCommandeId,
+            produitId: parseInt(kilo[index].idProduit),
+            quantity: kilo[index].quantity,
+            unite: kilo[index].unite
+          }, {
+             withCredentials: true,
+             headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+            })
+          const newOrderId = createOrder.data.idOrderItem
+          console.log(newOrderId)
+          const createFabrication = await axios.put(`http://localhost:3000/api/v1/fabItem/${newOrderId}`,{
+            withCredentials:true,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          console.log(createFabrication)
+          }
+          catch (err) {console.log(err)}
+        }
+      }); 
+      /**********************************************************************************************************/
+      Object.keys(fourniture).forEach(async (index) => {
+        if ( (fourniture[index].quantity !== 0)) {
+          try {
+            const createOrder = await axios.post('http://localhost:3000/api/v1/orderItem', {
+            bonCommandeId: bonCommandeId,
+            produitId: parseInt(fourniture[index].idProduit),
+            quantity: fourniture[index].quantity,
+            unite: fourniture[index].unite
           }, {
              withCredentials: true,
              headers: {
@@ -307,16 +365,16 @@ const AddBon = () => {
       console.log('response :',updateBonCommande)    
     }
     else {
-      for (const index of Object.keys(data)) {
-        if (data[index].suite !== 0) {
+      for (const index of Object.keys(suite)) {
+        if (suite[index].suite !== 0) {
           try {
             // First, create the order
             const orderCreate = await axios.post(
               'http://localhost:3000/api/v1/orderItem',
               {
                 bonCommandeId: bonCommandeId,
-                produitId: parseInt(data[index].idProduit),
-                suiteCommande: data[index].suite,
+                produitId: parseInt(suite[index].idProduit),
+                suiteCommande: suite[index].suite,
                 
               },
               {
@@ -366,66 +424,38 @@ const AddBon = () => {
       setTimeout(() => {
         setSuccess(true);
       }, 3000);
-      const ch = "Le bon de commande "+bonCommandeId+" a été modifier par "+authCtx.name;
+      const message = "Le bon de commande "+bonCommandeId+" a été modifier par "+authCtx.name;
       await axios.post('http://localhost:3000/api/v1/notifications',{
-        text:ch,
+        text:message,
         target:  ["RESPONSABLE_LOGISTIQUE"],
       })
       await axios.post('http://localhost:3000/api/v1/notifications',{
-        text:ch,
+        text:message,
         target:  ["ADMIN"],
       })
     }
   };
-  
-
-  const columns = [
+  const kiloColumns = [
     {
       id:1,
-      field: "idProduit",
-      headerName: <b>ID</b>,
-      flex: 1,
-      
-    },
-    {
-      id:2,
       field: "produit",
       headerName: <b>PRODUIT</b>,
       flex: 1,
     },
     {
-      id:4,
-      field: "class",
-      headerName: <b>CLASS</b>,
+      id:3,
+      field: "quantity",
+      headerName: <b>QTE</b>,
       flex: 1,
-
-    },
-    {
-      id:5,
-      field: "type",
-      headerName: <b>TYPE</b>,
-      flex: 1,
-
-    }
-    
-  
-    ];
-  if(currentBonCommande.type ==='SUITE'){
-  columns.push(
-    {
-      id:6,
-      field: "Suite",
-      headerName: "Suite",
-      flex: 1,
+      // disabled:{bonCommande.type==="SUITE"},
       renderCell: (params) => (
         <Box sx={{ height: 50 }}>
-        {params.isSelected ? (
-          <Box>
-            <Button>-</Button>
+        { (
+         
             <TextField
               type="number"
-              value={data[params.row.index]?.quantity ?? 0}
-              onChange={handleChange(params.row.index)}
+              value={kilo[params.row.index]?.quantity ?? 0}
+              onChange={handleKiloChange(params.row.index)}
               variant="outlined"
               sx={{
                 width: 65,
@@ -439,29 +469,92 @@ const AddBon = () => {
                 step: 50,
               }}
             />
-            <Button>+</Button>
-          </Box>
-        ) : (
-          // <Box>{data[params.row.index]?.quantity ?? 0}</Box>
      
-          <TextField
-            type="number"
-            value={data[params.row.index]?.suite ?? 0}
-            onChange={handleChange(params.row.index)}
-            variant="outlined"
-            sx={{
-              width: 65,
-              '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-                '-webkit-appearance': 'none',
-                margin: 0,
-              },
-            }}
-            inputProps={{
-              min: 0,
-              step: 50,
-            }}
-          />
+        ) }
+      </Box>
+        )
+    }
+  ]
 
+  const fournitureColumns = [
+    {
+      id:1,
+      field: "produit",
+      headerName: <b>PRODUIT</b>,
+      flex: 1,
+    },
+    {
+      id:3,
+      field: "quantity",
+      headerName: <b>QTE</b>,
+      flex: 1,
+      // disabled:{bonCommande.type==="SUITE"},
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={fourniture[params.row.index]?.quantity ?? 0}
+              onChange={handleFournitureChange(params.row.index)}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 50,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
+    }
+  ]
+
+
+  const columns = [
+    {
+      id:1,
+      field: "produit",
+      headerName: <b>PRODUIT</b>,
+      flex: 1,
+    }
+    ];
+  if(currentBonCommande.type ==='SUITE'){
+  columns.push(
+    {
+      id:6,
+      field: "Suite",
+      headerName: "Suite",
+      flex: 1,
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+          <Box>
+            <TextField
+              type="number"
+              value={suite[params.row.index]?.suite ?? 0}
+              onChange={handleSuiteChange(params.row.index)}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 50,
+              }}
+            />
+          </Box>
         )}
       </Box>
         )
@@ -475,12 +568,12 @@ const AddBon = () => {
       // disabled:{bonCommande.type==="SUITE"},
       renderCell: (params) => (
         <Box sx={{ height: 50 }}>
-        {params.row.isSelected ? (
+        { (
          
             <TextField
               type="number"
-              value={data[params.row.index]?.quantity ?? 0}
-              onChange={handleChange(params.row.index)}
+              value={suite[params.row.index]?.quantity ?? 0}
+              onChange={handleSuiteChange(params.row.index)}
               variant="outlined"
               sx={{
                 width: 65,
@@ -495,28 +588,7 @@ const AddBon = () => {
               }}
             />
      
-        ) : (
-          // <Box>{data[params.row.index]?.quantity ?? 0}</Box>
-         
-            <TextField
-              type="number"
-              value={data[params.row.index]?.quantity ?? 0}
-              onChange={handleChange(params.row.index)}
-              variant="outlined"
-              sx={{
-                width: 65,
-                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-                  '-webkit-appearance': 'none',
-                  margin: 0,
-                },
-              }}
-              inputProps={{
-                min: 0,
-                step: 50,
-              }}
-            />
-        
-        )}
+        ) }
       </Box>
         )
     },)
@@ -625,6 +697,7 @@ const AddBon = () => {
       <Box
         m="40px 0 0 0"
         height="75vh"
+        display="flex"
         sx={{
           "& .MuiDataGrid-root": {
             borderColor: colors.primary[400]
@@ -659,15 +732,28 @@ const AddBon = () => {
       >
         <DataGrid
         density="comfortable"
-        rows={data}
+        rows={suite}
         columns={columns}
         getRowId={(row)=>row.idProduit}
-        components={{ Toolbar: GridToolbar }}
-        slotProps={{
-          toolbar: {
-            showQuickFilter: true,
-          },
-        }}
+      
+        />
+         <DataGrid
+        density="comfortable"
+        rows={kilo}
+        columns={kiloColumns}
+        getRowId={(row)=>row.idProduit}
+        // slotProps={{
+        //   toolbar: {
+        //     showQuickFilter: true,
+        //   },
+        // }}
+      
+        />
+         <DataGrid
+        density="comfortable"
+        rows={fourniture}
+        columns={fournitureColumns}
+        getRowId={(row)=>row.idProduit}
       
         />
         

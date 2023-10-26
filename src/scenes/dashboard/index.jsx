@@ -29,11 +29,12 @@ import ConsultantSideBar from "../global/SideBars/consultantSideBar";
 import LivraisonInfo from "../livraison/info";
 import FabricationInfo from "../fabrication/info";
 import MesLivraisons from "../livraison/mesLivraisons";
-import Stock from "../stock";
+import pertes from "../pertes";
 import Points from "../pointVentes";
 import CommandeInfo from "../invoices/commandes";
 import LivraisonEdit from "../livraison/modifyLivraison";
 import NotificationCenter from "../../components/notificationsCenter";
+import Pertes from "../pertes"
 
 
 
@@ -51,6 +52,7 @@ import NotificationCenter from "../../components/notificationsCenter";
             <Topbar setIsSidebar={setIsSidebar} />
               <Routes>
               <Route path="/" element={<Home />} />
+                <Route path="/modifierCommande/:id" element={<AddCommande />} />
                 <Route path="/ajouterCommande/:id" element={<AddCommande />} />
                 <Route path="/produits" element={<Products />} />
                 <Route path="/bonCommande/:id" element={<AddBon />} />
@@ -61,6 +63,7 @@ import NotificationCenter from "../../components/notificationsCenter";
                 <Route path="/form" element={<Register />} />
                 <Route path="/pointsVentes" element={<Points />} />
                 <Route path="/notif" element={<NotificationCenter />} />
+                <Route path="/livraison/info/:id" element={<LivraisonInfo />}  />
               </Routes>
             </main>
           </div>
@@ -100,7 +103,7 @@ import NotificationCenter from "../../components/notificationsCenter";
                 <Route path="/bonCommande/info/:id" element={<Bcinfo />} />
                 <Route path="/livraison/info/:id" element={<LivraisonInfo />}  />
                 <Route path="/livraison/edit/:id" element={<LivraisonEdit />} />
-                <Route path="/stock" element={<Stock />} />
+                <Route path="/pertes" element={<Pertes />} />
               </Routes>
             </main>
           </div>

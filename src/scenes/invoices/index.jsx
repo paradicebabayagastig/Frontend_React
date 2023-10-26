@@ -13,24 +13,14 @@ import Modal from '@mui/material/Modal';
 import { useNavigate } from 'react-router-dom';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import ArticleIcon from '@mui/icons-material/Article';
+import SettingsIcon from '@mui/icons-material/Settings';
 const Invoices = () => {
   
   const navigate = useNavigate()
   const [data,setData] = useState([])
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: colors.primary[400],
-    border: '2px solid #000',
-    boxShadow: 24,
-    borderRadius:'30px',
-    p: 4,
-  };
   const authCtx = useContext(AuthContext)
   const token = authCtx.isAuthenticated
   const role = authCtx.role
@@ -87,7 +77,7 @@ const Invoices = () => {
                 <Checkbox
                   name="loading"
                  // Apply the color based on the state
-                  checked={params.row.fabricationId !== null ? true : false}
+                  checked={params.row.checkFabrication}
                   // onChange={() => handleSwitchChange(params.id)}
                    // Disable the switch once it's pressed
                    color="default"
@@ -140,7 +130,7 @@ const Invoices = () => {
             }}
             >
           
-                <RemoveRedEyeIcon />
+                <ArticleIcon />
             
             </IconButton>
             
@@ -161,7 +151,7 @@ const Invoices = () => {
           }}
           >
 
-              <EditNoteIcon />
+              <SettingsIcon />
 
           </IconButton>
 
@@ -218,12 +208,25 @@ const Invoices = () => {
           });
           const date = order.dateCommande
           const dateOnly = date.split('T')[0]
-  
+          console.log(order)
+          let fabricationCheck
+          let check = false
+          if (order.fabricationId !== null) {
+            fabricationCheck = await axios.get(`http://localhost:3000/api/v1/fabrication/${order.fabricationId}`, {
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }) 
+          check = fabricationCheck.data.validationFabrication
+          }
           const orderWithUserName = {
             idCommande: order.idCommande,
             reference : order.refBC,
             dateCommande: dateOnly,
             fabricationId: order.fabricationId,
+            checkFabrication: check,
             livraison:order.livraison,
             name: userResponse.data.nomUtilisateur  // Assuming the user's username is stored in `username` property
           };
@@ -290,33 +293,48 @@ const Invoices = () => {
 
   return (
     <Box ml="20px" mt="20px">
-      <Box display='flex'>
+      <Box display='flex' justifyContent='space-between'>
       <Header title=" Commandes "  /> 
         {(role === 'POINT_DE_VENTE') && (
-          <Fab 
-          sx={{
-              color: colors.pinkAccent[400],
-              background: colors.primary[400],
-              marginLeft:15
-          }} 
-          aria-label="add"  
-          onClick={handleClick}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="36"
-              height="36"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-          </Fab>
+          <Button sx={{
+              color: colors.primary[100],
+                background: colors.primary[400],
+                marginRight:5,
+                border:1,
+                borderColor:colors.primary[400],
+                "&:hover":{
+                  borderColor:colors.pinkAccent[400],
+                  color:colors.pinkAccent[400],
+                  background: colors.primary[500]                }
+          }}
+          onClick={handleClick}>
+            <AddIcon/>
+            Nouvelle Commande
+           </Button>
+          // <Fab 
+          // sx={{
+          //     color: colors.pinkAccent[400],
+          //     background: colors.primary[400],
+          //     marginLeft:15
+          // }} 
+          // aria-label="add"  
+          // onClick={handleClick}
+          // >
+          //   <svg
+          //     xmlns="http://www.w3.org/2000/svg"
+          //     width="36"
+          //     height="36"
+          //     viewBox="0 0 24 24"
+          //     fill="none"
+          //     stroke="currentColor"
+          //     strokeWidth="2"
+          //     strokeLinecap="round"
+          //     strokeLinejoin="round"
+          //   >
+          //     <line x1="12" y1="5" x2="12" y2="19"></line>
+          //     <line x1="5" y1="12" x2="19" y2="12"></line>
+          //   </svg>
+          // </Fab>
         )
           
         }
@@ -370,6 +388,11 @@ const Invoices = () => {
         slotProps={{
           toolbar: {
             showQuickFilter: true,
+          },
+        }}
+        initialState={{
+          sorting: {
+            sortModel: [{ field: 'dateCommande', sort: 'desc' }],
           },
         }}
         />

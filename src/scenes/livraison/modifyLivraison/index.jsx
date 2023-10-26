@@ -1,4 +1,4 @@
-import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Alert, Box, CircularProgress, Icon, InputLabel, Select, Snackbar, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
@@ -8,398 +8,367 @@ import {AuthContext} from "../../../contexts/Auth"
 import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
+import EditIcon from '@mui/icons-material/Edit';
 
 const LivraisonEdit = () => {
    
       const params = useParams();
       const commandeId = parseInt(params.id);
-      console.log(commandeId);
         const authCtx = useContext(AuthContext)
         const role = authCtx.role
+        console.log('role:',role)
         const token = authCtx.isAuthenticated;
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
-        const [data,setData] = useState([]);
-        // const [products,setProducts] = useState([])
-        const [loading, setLoading] = useState(false);
-        const [success, setSuccess] = useState(false);
-        const [redirect, setRedirect] = useState(false);
-        const [allgood,setAllgood] = useState(true)
-        const navigate = useNavigate();
+        const [aggregatedData, setAggregatedData] = useState({
+          FOURNITURE: [],
+          KG: [],
+          SUITE: [],
+        });
+        const [loading, setLoading] = useState(true);
 
         const handleLivraisonChange = async (rowIndex, orderItemId, newValueStr) => {
-            const newValue = parseInt(newValueStr)
-            try {
-                const response = await axios.patch('http://localhost:3000/api/v1/orderItem/livraison',{
-                    idOrderItem:orderItemId,
-                    livraison:newValue
-                },{
-                    withCredentials:true,
-                    headers:{
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                 // Create a copy of the data array
-                const newData = [...data];
-            
-                // Update the livraison value for the specific row
-                newData[rowIndex].QteLivre = newValue;
-            
-                // Update the state with the new data
-                setData(newData);
-            }
-            catch (error) {
+          const newValue = parseInt(newValueStr)
+          try {
+              const response = await axios.patch('http://localhost:3000/api/v1/orderItem/livraison',{
+                  idOrderItem:orderItemId,
+                  QteLivre:newValue
+              },{
+                  withCredentials:true,
+                  headers:{
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                  }
+              })
+               // Create a copy of the data array
+              const newData = [...aggregatedData];
+          
+              // Update the livraison value for the specific row
+              newData[rowIndex].QteLivre = newValue;
+          
+              // Update the state with the new data
+              setAggregatedData(newData);
+          }
+          catch (error) {
 
-            }
-           
-          };
-          const handleEcartChange = async (rowIndex, orderItemId, newValueStr) => {
-            const newValue = parseInt(newValueStr)
-            try {
-                const response = await axios.patch('http://localhost:3000/api/v1/orderItem/ecart',{
-                    idOrderItem:orderItemId,
-                    ecart:newValue
-                },{
-                    withCredentials:true,
-                    headers:{
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                 // Create a copy of the data array
-                const newData = [...data];
-            
-                // Update the livraison value for the specific row
-                newData[rowIndex].ecart = newValue;
-            
-                // Update the state with the new data
-                setData(newData);
-            }
-            catch (error) {
+          }
+         
+        };
+        const handleEcartChange = async (rowIndex, orderItemId, newValueStr) => {
+          const newValue = parseInt(newValueStr)
+          try {
+              const response = await axios.patch('http://localhost:3000/api/v1/orderItem/ecart',{
+                  idOrderItem:orderItemId,
+                  ecart:newValue
+              },{
+                  withCredentials:true,
+                  headers:{
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                  }
+              })
+               // Create a copy of the data array
+              const newData = [...aggregatedData];
+          
+              // Update the livraison value for the specific row
+              newData[rowIndex].ecart = newValue;
+          
+              // Update the state with the new data
+              setAggregatedData(newData);
+          }
+          catch (error) {
 
-            }
-           
-          };
-          const handleFeedbackChange = async (rowIndex, orderItemId, newValueStr) => {
-            const newValue = parseInt(newValueStr)
-            try {
-                const response = await axios.patch('http://localhost:3000/api/v1/orderItem/feedback',{
-                    idOrderItem:orderItemId,
-                    feedback:newValue
-                },{
-                    withCredentials:true,
-                    headers:{
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                 // Create a copy of the data array
-                const newData = [...data];
-            
-                // Update the livraison value for the specific row
-                newData[rowIndex].feedback = newValue;
-            
-                // Update the state with the new data
-                setData(newData);
-            }
-            catch (error) {
+          }
+         
+        };
+        const handleFeedbackChange = async (rowIndex, orderItemId, newValueStr) => {
+          const newValue = parseInt(newValueStr)
+          try {
+              const response = await axios.patch('http://localhost:3000/api/v1/orderItem/feedback',{
+                  idOrderItem:orderItemId,
+                  feedback:newValue
+              },{
+                  withCredentials:true,
+                  headers:{
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                  }
+              })
+               // Create a copy of the data array
+              const newData = [...aggregatedData];
+          
+              // Update the livraison value for the specific row
+              newData[rowIndex].feedback = newValue;
+          
+              // Update the state with the new data
+              setAggregatedData(newData);
+          }
+          catch (error) {
 
-            }
-           
-          };
+          }
+         
+        };
 
-        const message = ("Information bon livraison n°"+ commandeId )
+        const message = ("Information commande")
         async function fetchData() {
           try {
-            const bcResponse = await axios.get(`http://localhost:3000/api/v1/bons-commandes/commande/${commandeId}`, {
-              withCredentials: true,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+            const bonCommandeResponse = await axios.get(
+              `http://localhost:3000/api/v1/bons-commandes/commande/${commandeId}`,
+              {
+                withCredentials: true,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
               }
-            })
-            const orders = await Promise.all(bcResponse.data.map(async (bonCommande) => {
-              const response = await axios.get(`http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`, {
-              withCredentials: true,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            const initialQuantities = await Promise.all(response.data.map( async (orderItem,index) => {
-              const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${orderItem.produitId}`,{
-                  withCredentials: true,
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+            );
+        
+            // Initialize categorized orders
+            const categorizedOrders = {
+              FOURNITURE: {},
+              KG: {},
+              SUITE: {},
+            };
+        
+            await Promise.all(
+              bonCommandeResponse.data.map(async (bonCommande) => {
+                const orderItemsResponse = await axios.get(
+                  `http://localhost:3000/api/v1/orderItem/bonCommande/${bonCommande.idBonCommande}`,
+                  {
+                    withCredentials: true,
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    }
                   }
-                } )
-              const order = {
-              index:index,
-              orderItemId: orderItem.idOrderItem,
-              produit: produitResponse.data.nomProduit,
-              class:produitResponse.data.class,
-              quantity: orderItem.quantity,
-              suiteCommande:orderItem.suiteCommande,
-              QteLivre:orderItem.QteLivre,
-              ecart:orderItem.ecart,
-              feedback:orderItem.feedback,
-              };
-              return order
-            }))
-            return initialQuantities
+                );
+        
+                for (const order of orderItemsResponse.data) {
+                  const type = order.type;
+                  const produitResponse = await axios.get(
+                    `http://localhost:3000/api/v1/produits/${order.produitId}`,
+                    {
+                      withCredentials: true,
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      }
+                    }
+                  );
+        
+                  const key = `${produitResponse.data.nomProduit}-${order.unite}`;
+        
+                  if (!categorizedOrders[type][key]) {
+                    categorizedOrders[type][key] = {
+                      id: order.idOrderItem,
+                      produit: produitResponse.data.nomProduit,
+                      class: produitResponse.data.class,
+                      type: produitResponse.data.type,
+                      unite: order.unite,
+                      ecart:order.ecart,
+                      QteLivre:order.QteLivre,
+                      feedback:order.feedback,
+                      quantity: order.quantity,
+                      suiteC: order.suiteCommande,
+                    };
+                  }
+                }
+              })
+            );
+        
+            // Convert categorized orders into arrays
+            const aggregatedQuantities = {
+              FOURNITURE: Object.values(categorizedOrders.FOURNITURE),
+              KG: Object.values(categorizedOrders.KG),
+              SUITE: Object.values(categorizedOrders.SUITE),
+            };
+        
+            console.log("Aggregated quantities for FOURNITURE:", aggregatedQuantities.FOURNITURE);
             
-          
-      
-            
-              
-            }));  
-            const flattenedOrders = orders.flatMap((orderArray) => orderArray);  
-            console.log("response : ",flattenedOrders)
-            console.log("initial quantities:", flattenedOrders);
-    
-            /* The line `const updatedProducts = [{}].concat(initialQuantities);` is creating a new
-            array called `updatedProducts` by concatenating an empty object `{}` with the
-            `initialQuantities` array. This is done to add an empty object as the first element of
-            the array, which can be useful in certain scenarios. */
-            // const updatedProducts = [{}].concat(initialQuantities);
-      
-            setData(flattenedOrders);
-    
-            
-            // console.log("products after state update:", products);
-          }
-       
-          catch(err) {
-            console.log(err)
+            console.log("Aggregated quantities for KG:", aggregatedQuantities.KG);
+            console.log("Aggregated quantities for SUITE:", aggregatedQuantities.SUITE);
+            setAggregatedData(aggregatedQuantities)
+          } catch (err) {
+            console.log(err);
           }
         }
-
+        
+          
         
   useEffect(()=>{
     
     fetchData()
   },[])
 
-  // useEffect(() => {
-  //   const initialQuantities = [{}]
-  //     data.map((produit) => (
-  //       initialQuantities.push({
-  //         productId:produit.idProduit,
-  //         quantity:0,
-  //         unite:"BAC5"
-  //       })
-  //     ))
-  //     setProducts(initialQuantities)
-  // },[data])
-  useEffect(() => {
-    console.log("data changed! :",data);
-  
-  }, [data]);
 
   useEffect(() => {
-    if (success) {
-      setLoading(false); // Turn off loading once successful
-      setTimeout(() => {
-        setRedirect(true); // After 2 seconds, set redirect to true
-      }, 2000);
-    }
-  }, [success]);
-
-  useEffect(() => {
-    if (redirect) {
-      navigate('/commande');
-    }
-  }, [redirect, navigate]);
-
-//   const handleChange = (productId) => (event) =>{
-//     let newQuantity = event.target.value;
-//     newQuantity = parseInt(newQuantity)
-//     console.log("Updating quantity for product", productId, "to", newQuantity);
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],quantity:newQuantity}
-//     }));
-// //   }
-//   const handleUnitChange = (productId) => (event) => {
-//     let newUnit = event.target.value;
-//     console.log(newUnit)
-//     setProducts((prevProducts) => ({
-//       ...prevProducts,
-//       [productId]: {...prevProducts[productId],unite:newUnit}
-//     }));
-
-//   }
-
-//   const handleSubmit = () => {
-//     console.log(products)
-//     Object.keys(products).forEach( index => {
-//       if (index !== 0) {
-//         console.log(`Product ID: ${products[index].productId}, Quantity: ${products[index].quantity}`);
-        
-//         axios.post('http://localhost:3000/api/v1/orderItem', {
-//           bonCommandeId: bonCommandeId,
-//           produitId: parseInt(products[index].productId),
-//           quantity: products[index].quantity,
-//           unite: products[index].unite
-//         }, { withCredentials: true })
-//         .then((response) => {
-//           console.log(response);
-//         })
-//         .catch((err) => {
-//           console.log(err);
-//           setAllgood(false); // Set allGood to false if any error occurs
-//         });
-//       }
-//     });
-  
-//     if (allgood) {
-//       setLoading(true);
-//       setTimeout(() => {
-//         setSuccess(true);
-//       }, 3000);
-//     }
-//   };
-  
-
+    console.log("data changed! :",aggregatedData);
+    setLoading(false)
+  }, [aggregatedData]);
   const columns = [
-    {
-      id:1,
-      field: "orderItemId",
-      headerName: "id",
-      flex: 1,
-      
-    },
     {
       id:2,
       field: "produit",
-      headerName: "produit",
+      headerName: <b>PRODUIT</b>,
       flex: 1,
+      cellClassName:"quantity-column--cell"
     },
     {
       id:3,
       field: "quantity",
-      headerName: "quantity",
-      flex: 1,
+      headerName: <b>QTE</b>,
+      flex: 0.5,
       cellClassName:"quantity-column--cell"
      
     },
     {
       id:4,
-      field: "suiteCommande",
-      headerName: "suiteC",
-      flex: 1,
+      field: "suiteC",
+      headerName: <b>SUITE C</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
 
     },
     {
-      id:8,
+      id:4,
+      field: "QteLivre",
+      headerName: <b>QTE LIVRAISON</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell",
+      renderCell:(params) => {
+        // (role === 'RESPONSABLE_LOGISTIQUE')?
+        <TextField
+        type="number"
+        value={aggregatedData.SUITE[params.row.index]?.QteLivre ?? 0}
+        onChange={handleLivraisonChange(params.row.index)}
+        variant="outlined"
+        sx={{
+          width: 65,
+          '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+            '-webkit-appearance': 'none',
+            margin: 0,
+          },
+        }}
+        inputProps={{
+          min: 0,
+          step: 50,
+        }}
+      />
+      // :<Typography >
+      //   {aggregatedData.SUITE[params.row.index].QteLivre}
+      //   zeb 
+      // </Typography>
+      }
+
+    },
+    {
+      id:4,
       field: "ecart",
-      headerName: "ecart",
-      flex: 1,
-      renderCell: (params) =>
-          role !== 'POINT_DE_VENTE' ? (
-            <Box sx={{ height: 50 }}>
-              <TextField
-                type="number"
-                value={data[params.row.index]?.ecart ?? 10}
-                onChange={(e) =>
-                  handleEcartChange(params.row.index, params.row.orderItemId, e.target.value)
-                }
-                variant="outlined"
-                sx={{
-                  width: 65,
-                  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-                    '-webkit-appearance': 'none',
-                    margin: 0,
-                  },
-                }}
-                inputProps={{
-                  min: 0,
-                  step: 50,
-                }}
-              />
-            </Box>
-          ) : (
-            data[params.row.index]?.ecart ?? ''
-          ),
+      headerName: <b>ECART</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
 
     },
     {
-        id: 5,
-        field: "QteLivre",
-        headerName: "QteLivre",
-        flex: 1,
-        renderCell: (params) =>
-          role !== 'POINT_DE_VENTE' ? (
-            <Box sx={{ height: 50 }}>
-              <TextField
-                type="number"
-                value={data[params.row.index]?.QteLivre ?? 10}
-                onChange={(e) =>
-                  handleLivraisonChange(params.row.index, params.row.orderItemId, e.target.value)
-                }
-                variant="outlined"
-                sx={{
-                  width: 65,
-                  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-                    '-webkit-appearance': 'none',
-                    margin: 0,
-                  },
-                }}
-                inputProps={{
-                  min: 0,
-                  step: 50,
-                }}
-              />
-            </Box>
-          ) : (
-            data[params.row.index]?.livraison ?? ''
-          ),
-      },
-    {
-      id:6,
+      id:4,
       field: "feedback",
-      headerName: "feedback",
-      flex: 1,
-      renderCell: (params) =>
-          role === 'POINT_DE_VENTE' ? (
-            <Box sx={{ height: 50 }}>
-              <TextField
-                type="number"
-                value={data[params.row.index]?.feedback ?? 0}
-                onChange={(e) =>
-                    handleFeedbackChange(params.row.index, params.row.orderItemId, e.target.value)
-                }
-                variant="outlined"
-                sx={{
-                  width: 65,
-                  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-                    '-webkit-appearance': 'none',
-                    margin: 0,
-                  },
-                }}
-                inputProps={{
-                  min: 0,
-                  step: 50,
-                }}
-              />
-            </Box>
-          ) : (
-            data[params.row.index]?.feedback ?? ''
-          ),
-
-    },  
-    {
-      id:7,
-      field: "class",
-      headerName: "class",
-      flex: 1,
+      headerName: <b>FEEDBACK</b>,
+      flex: 0.5,
+      cellClassName:"quantity-column--cell"
 
     },
- 
+
     ];
+    const Folumns = [
+      {
+        id:1,
+        field: "produit",
+        headerName: <b>PRODUIT</b>,
+        flex: 1,
+        cellClassName:"quantity-column--cell"
+      },
+      {
+        id:2,
+        field: "quantity",
+        headerName: <b>QTE</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+       
+      },
+      {
+        id:3,
+        field: "QteLivre",
+        headerName: <b>QTE LIVRAISON</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
   
+      },
+      {
+        id:4,
+        field: "ecart",
+        headerName: <b>ECART</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+  
+      },
+      {
+        id:5,
+        field: "feedback",
+        headerName: <b>FEEDBACK</b>,
+        flex: 0.5,
+        cellClassName:"quantity-column--cell"
+  
+      },
+      ];
+      const Kolumns = [
+        {
+          id:1,
+          field: "produit",
+          headerName: <b>PRODUIT</b>,
+          flex: 1,
+          cellClassName:"quantity-column--cell"
+        },
+        {
+          id:2,
+          field: "quantity",
+          headerName: <b>QTE</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+         
+        },
+        {
+          id:3,
+          field: "unite",
+          headerName: <b>UNITE</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+         
+        },
+        {
+          id:4,
+          field: "QteLivre",
+          headerName: <b>QTE LIVRAISON</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+    
+        },
+        {
+          id:5,
+          field: "ecart",
+          headerName: <b>ECART</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+    
+        },
+        {
+          id:6,
+          field: "feedback",
+          headerName: <b>FEEDBACK</b>,
+          flex: 0.5,
+          cellClassName:"quantity-column--cell"
+    
+        },
+        ];
   return (
     <Box m="20px">
       {loading && (
@@ -423,7 +392,37 @@ const LivraisonEdit = () => {
           />
         </Box>
       ) }
-      <Header title={message}  />
+      <Box
+      display="flex"
+      justifyContent="space-between"
+      >
+        <Header title={message}  />
+        <Button sx={{
+          color:colors.primary[100],
+          marginRight:5,
+          backgroundColor:colors.primary[400],
+          display:"flex",
+          justifyContent:"center",
+          marginRight:5,
+          marginBottom:5,
+          gap:1.5,
+          "&:hover":{
+            backgroundColor:colors.pinkAccent[400]
+          }
+        }}>
+         
+          <Typography>
+          <b>Modifier</b>
+          </Typography>
+          <Icon sx={{
+            marginBottom:1.5
+          }}>
+            <EditIcon />
+          </Icon>
+          </Button>
+          
+      </Box>
+      
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -454,26 +453,33 @@ const LivraisonEdit = () => {
           "& .MuiCheckbox-root": {
             color: `${colors.pinkAccent[200]} !important`,
           },
+          
         }}
       >
         <DataGrid
-        checkboxSelection
-        rows={data}
+        editMode="row"
+        rows={aggregatedData.SUITE}
         columns={columns}
-        getRowId={(row)=>row.orderItemId}
+        getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         />
+         <DataGrid
+        editMode="row"
+        rows={aggregatedData.KG}
+        columns={Folumns}
+        getRowId={(row)=>row.id}
+        components={{ Toolbar: GridToolbar }}
+        />
+         <DataGrid
+        rows={aggregatedData.FOURNITURE}
+        columns={Kolumns}
+        getRowId={(row)=>row.id}
+        components={{ Toolbar: GridToolbar }}
+        editMode="row"
+        />
       </Box>
-      <Snackbar open={success} autoHideDuration={2000}>
-        <Alert sx={{
-          position: 'fixed',
-          bottom: '50px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}  severity="success">Operation Successful! Redirecting...</Alert>
-      </Snackbar>
     </Box>
-  );
+);
 };
 
 export default LivraisonEdit;
