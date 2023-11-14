@@ -213,7 +213,7 @@ const AddBon = () => {
 
   const handleKiloChange = (index) => (event) => {
     let newQuantity = event.target.value;
-    newQuantity = parseInt(newQuantity)
+    newQuantity = parseFloat(newQuantity)
     setKilo((prevKilo) => {
       return prevKilo.map((item) => {
         if (item.index === index) {
@@ -225,7 +225,7 @@ const AddBon = () => {
   }
   const handleFournitureChange = (index) => (event) => {
     let newQuantity = event.target.value;
-    newQuantity = parseInt(newQuantity)
+    newQuantity = parseFloat(newQuantity)
     setFourniture((prevFourniture) => {
       return prevFourniture.map((item) => {
         if (item.index === index) {
@@ -238,7 +238,7 @@ const AddBon = () => {
 
   const handleSuiteChange = (index) => (event) =>{
     let newQuantity = event.target.value;
-    newQuantity = parseInt(newQuantity)
+    newQuantity = parseFloat(newQuantity)
     if (currentBonCommande.type !== 'SUITE') {
       setSuite((prevSuite) => {
           return prevSuite.map((item) => {
@@ -439,7 +439,7 @@ const AddBon = () => {
     {
       id:1,
       field: "produit",
-      headerName: <b>PRODUIT</b>,
+      headerName: <b>SPECIAL</b>,
       flex: 1,
     },
     {
@@ -454,7 +454,7 @@ const AddBon = () => {
          
             <TextField
               type="number"
-              value={kilo[params.row.index]?.quantity ?? 0}
+              value={parseFloat(kilo[params.row.index]?.quantity ?? 0)}
               onChange={handleKiloChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -466,7 +466,7 @@ const AddBon = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
      
@@ -480,7 +480,7 @@ const AddBon = () => {
     {
       id:1,
       field: "produit",
-      headerName: <b>PRODUIT</b>,
+      headerName: <b>FOURNITURES</b>,
       flex: 1,
     },
     {
@@ -495,7 +495,7 @@ const AddBon = () => {
          
             <TextField
               type="number"
-              value={fourniture[params.row.index]?.quantity ?? 0}
+              value={parseFloat(fourniture[params.row.index]?.quantity ?? 0)}
               onChange={handleFournitureChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -507,7 +507,7 @@ const AddBon = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
      
@@ -522,7 +522,7 @@ const AddBon = () => {
     {
       id:1,
       field: "produit",
-      headerName: <b>PRODUIT</b>,
+      headerName: <b>GLACE</b>,
       flex: 1,
     }
     ];
@@ -539,7 +539,7 @@ const AddBon = () => {
           <Box>
             <TextField
               type="number"
-              value={suite[params.row.index]?.suite ?? 0}
+              value={parseFloat(suite[params.row.index]?.suite ?? 0)}
               onChange={handleSuiteChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -551,7 +551,7 @@ const AddBon = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
           </Box>
@@ -572,7 +572,7 @@ const AddBon = () => {
          
             <TextField
               type="number"
-              value={suite[params.row.index]?.quantity ?? 0}
+              value={parseFloat(suite[params.row.index]?.quantity ?? 0)}
               onChange={handleSuiteChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -584,7 +584,7 @@ const AddBon = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
      

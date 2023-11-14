@@ -9,11 +9,13 @@ import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
 import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
 
 const LivraisonEdit = () => {
    
       const params = useParams();
       const commandeId = parseInt(params.id);
+      const navigate = useNavigate();
         const authCtx = useContext(AuthContext)
         const role = authCtx.role
         console.log('role:',role)
@@ -25,90 +27,70 @@ const LivraisonEdit = () => {
           KG: [],
           SUITE: [],
         });
+        const [modifiedRows, setModifiedRows] = useState({});
         const [loading, setLoading] = useState(true);
 
-        const handleLivraisonChange = async (rowIndex, orderItemId, newValueStr) => {
-          const newValue = parseInt(newValueStr)
-          try {
-              const response = await axios.patch('http://localhost:3000/api/v1/orderItem/livraison',{
-                  idOrderItem:orderItemId,
-                  QteLivre:newValue
-              },{
-                  withCredentials:true,
-                  headers:{
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                  }
-              })
-               // Create a copy of the data array
-              const newData = [...aggregatedData];
-          
-              // Update the livraison value for the specific row
-              newData[rowIndex].QteLivre = newValue;
-          
-              // Update the state with the new data
-              setAggregatedData(newData);
-          }
-          catch (error) {
-
-          }
-         
-        };
-        const handleEcartChange = async (rowIndex, orderItemId, newValueStr) => {
-          const newValue = parseInt(newValueStr)
-          try {
-              const response = await axios.patch('http://localhost:3000/api/v1/orderItem/ecart',{
-                  idOrderItem:orderItemId,
-                  ecart:newValue
-              },{
-                  withCredentials:true,
-                  headers:{
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                  }
-              })
-               // Create a copy of the data array
-              const newData = [...aggregatedData];
-          
-              // Update the livraison value for the specific row
-              newData[rowIndex].ecart = newValue;
-          
-              // Update the state with the new data
-              setAggregatedData(newData);
-          }
-          catch (error) {
-
-          }
-         
-        };
-        const handleFeedbackChange = async (rowIndex, orderItemId, newValueStr) => {
-          const newValue = parseInt(newValueStr)
-          try {
-              const response = await axios.patch('http://localhost:3000/api/v1/orderItem/feedback',{
-                  idOrderItem:orderItemId,
-                  feedback:newValue
-              },{
-                  withCredentials:true,
-                  headers:{
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                  }
-              })
-               // Create a copy of the data array
-              const newData = [...aggregatedData];
-          
-              // Update the livraison value for the specific row
-              newData[rowIndex].feedback = newValue;
-          
-              // Update the state with the new data
-              setAggregatedData(newData);
-          }
-          catch (error) {
-
-          }
-         
-        };
-
+        const handleFieldChange = (arrayType, index, field, newValue) => {
+          // Parse the value to ensure it's a float
+          const parsedValue = parseFloat(newValue);
+      
+          const updatedArray = [...aggregatedData[arrayType]];
+          const modifiedRow = { ...updatedArray[index] };
+          modifiedRow[field] = parsedValue;
+      
+          setModifiedRows({
+              ...modifiedRows,
+              [arrayType]: {
+                  ...modifiedRows[arrayType],
+                  [index]: modifiedRow,
+              },
+          });
+      
+          updatedArray[index] = modifiedRow;
+          setAggregatedData({
+              ...aggregatedData,
+              [arrayType]: updatedArray,
+          });
+      };
+      
+      const handleSubmit = async () => {
+        try {
+          console.log(modifiedRows)
+            const orderTypes = Object.keys(modifiedRows);
+            const patchRequests = []; // Store the patch request promises
+    
+            for (const type of orderTypes) {
+                const orderObjects = modifiedRows[type];
+                const orderIndices = Object.keys(orderObjects);
+    
+                for (const index of orderIndices) {
+                    const order = orderObjects[index];
+                    const patchPromise = axios.patch(
+                        `http://localhost:3000/api/v1/orderItem/${order.id}`,
+                        order,
+                        {
+                            withCredentials: true,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        }
+                    );
+                    patchRequests.push(patchPromise);
+                }
+            }
+    
+            // Await all patch requests and navigate after completion
+            await Promise.all(patchRequests);
+            navigate(`/livraison/info/${commandeId}`)
+            // Navigate to another page here
+            // For example, if using React Router:
+            // history.push('/next-page'); // Make sure to have the 'history' object available
+        } catch (error) {
+            console.error("Error updating orders:", error);
+        }
+    };
+    
         const message = ("Information commande")
         async function fetchData() {
           try {
@@ -142,7 +124,7 @@ const LivraisonEdit = () => {
                     }
                   }
                 );
-        
+                const index = { FOURNITURE: 0, KG: 0, SUITE: 0 }; // Initialize indices for each category   
                 for (const order of orderItemsResponse.data) {
                   const type = order.type;
                   const produitResponse = await axios.get(
@@ -156,10 +138,11 @@ const LivraisonEdit = () => {
                     }
                   );
         
-                  const key = `${produitResponse.data.nomProduit}-${order.unite}`;
+                  const key = `${index[type]}`;
         
                   if (!categorizedOrders[type][key]) {
                     categorizedOrders[type][key] = {
+                      index: index[type],
                       id: order.idOrderItem,
                       produit: produitResponse.data.nomProduit,
                       class: produitResponse.data.class,
@@ -170,7 +153,9 @@ const LivraisonEdit = () => {
                       feedback:order.feedback,
                       quantity: order.quantity,
                       suiteC: order.suiteCommande,
+                      
                     };
+                    index[type]++
                   }
                 }
               })
@@ -222,7 +207,7 @@ const LivraisonEdit = () => {
      
     },
     {
-      id:4,
+      id:3,
       field: "suiteC",
       headerName: <b>SUITE C</b>,
       flex: 0.5,
@@ -234,43 +219,68 @@ const LivraisonEdit = () => {
       field: "QteLivre",
       headerName: <b>QTE LIVRAISON</b>,
       flex: 0.5,
-      cellClassName:"quantity-column--cell",
-      renderCell:(params) => {
-        // (role === 'RESPONSABLE_LOGISTIQUE')?
-        <TextField
-        type="number"
-        value={aggregatedData.SUITE[params.row.index]?.QteLivre ?? 0}
-        onChange={handleLivraisonChange(params.row.index)}
-        variant="outlined"
-        sx={{
-          width: 65,
-          '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-            '-webkit-appearance': 'none',
-            margin: 0,
-          },
-        }}
-        inputProps={{
-          min: 0,
-          step: 50,
-        }}
-      />
-      // :<Typography >
-      //   {aggregatedData.SUITE[params.row.index].QteLivre}
-      //   zeb 
-      // </Typography>
-      }
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(aggregatedData.SUITE[params.row.index]?.QteLivre ?? 0)}
+              onChange={(e) => handleFieldChange('SUITE',params.row.index,'QteLivre', e.target.value)}
+              variant="outlined"
+              sx={{
+                width: 85,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
 
     },
     {
-      id:4,
+      id:5,
       field: "ecart",
       headerName: <b>ECART</b>,
       flex: 0.5,
-      cellClassName:"quantity-column--cell"
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(aggregatedData.SUITE[params.row.index]?.ecart ?? 0)}
+              onChange={(e) => handleFieldChange('SUITE',params.row.index,'ecart', e.target.value)}
+              variant="outlined"
+              sx={{
+                width: 85,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
+      
 
     },
     {
-      id:4,
+      id:6,
       field: "feedback",
       headerName: <b>FEEDBACK</b>,
       flex: 0.5,
@@ -279,7 +289,7 @@ const LivraisonEdit = () => {
     },
 
     ];
-    const Folumns = [
+    const Kolumns = [
       {
         id:1,
         field: "produit",
@@ -300,7 +310,31 @@ const LivraisonEdit = () => {
         field: "QteLivre",
         headerName: <b>QTE LIVRAISON</b>,
         flex: 0.5,
-        cellClassName:"quantity-column--cell"
+        renderCell: (params) => (
+          <Box sx={{ height: 50 }}>
+          { (
+           
+              <TextField
+                type="number"
+                value={parseFloat(aggregatedData.KG[params.row.index]?.QteLivre ?? 0)}
+                onChange={(e) => handleFieldChange('KG',params.row.index,'QteLivre', e.target.value)}
+                variant="outlined"
+                sx={{
+                  width: 85,
+                  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                    '-webkit-appearance': 'none',
+                    margin: 0,
+                  },
+                }}
+                inputProps={{
+                  min: 0,
+                  step: 0.1,
+                }}
+              />
+       
+          ) }
+        </Box>
+          )
   
       },
       {
@@ -308,7 +342,31 @@ const LivraisonEdit = () => {
         field: "ecart",
         headerName: <b>ECART</b>,
         flex: 0.5,
-        cellClassName:"quantity-column--cell"
+        renderCell: (params) => (
+          <Box sx={{ height: 50 }}>
+          { (
+           
+              <TextField
+                type="number"
+                value={parseFloat(aggregatedData.KG[params.row.index]?.ecart ?? 0)}
+                onChange={(e) => handleFieldChange('KG',params.row.index,'ecart', e.target.value)}
+                variant="outlined"
+                sx={{
+                  width: 85,
+                  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                    '-webkit-appearance': 'none',
+                    margin: 0,
+                  },
+                }}
+                inputProps={{
+                  min: 0,
+                  step: 0.1,
+                }}
+              />
+       
+          ) }
+        </Box>
+          )
   
       },
       {
@@ -320,7 +378,7 @@ const LivraisonEdit = () => {
   
       },
       ];
-      const Kolumns = [
+      const Folumns = [
         {
           id:1,
           field: "produit",
@@ -349,19 +407,35 @@ const LivraisonEdit = () => {
           field: "QteLivre",
           headerName: <b>QTE LIVRAISON</b>,
           flex: 0.5,
-          cellClassName:"quantity-column--cell"
+          renderCell: (params) => (
+            <Box sx={{ height: 50 }}>
+            { (
+             
+                <TextField
+                  type="number"
+                  value={parseFloat(aggregatedData.FOURNITURE[params.row.index]?.QteLivre ?? 0)}
+                  onChange={(e) => handleFieldChange('FOURNITURE',params.row.index,'QteLivre', e.target.value)}
+                  variant="outlined"
+                  sx={{
+                    width: 85,
+                    '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                      '-webkit-appearance': 'none',
+                      margin: 0,
+                    },
+                  }}
+                  inputProps={{
+                    min: 0,
+                    step: 0.1,
+                  }}
+                />
+         
+            ) }
+          </Box>
+            )
     
         },
         {
           id:5,
-          field: "ecart",
-          headerName: <b>ECART</b>,
-          flex: 0.5,
-          cellClassName:"quantity-column--cell"
-    
-        },
-        {
-          id:6,
           field: "feedback",
           headerName: <b>FEEDBACK</b>,
           flex: 0.5,
@@ -397,7 +471,9 @@ const LivraisonEdit = () => {
       justifyContent="space-between"
       >
         <Header title={message}  />
-        <Button sx={{
+        <Button
+        onClick={handleSubmit} 
+        sx={{
           color:colors.primary[100],
           marginRight:5,
           backgroundColor:colors.primary[400],
@@ -412,12 +488,12 @@ const LivraisonEdit = () => {
         }}>
          
           <Typography>
-          <b>Modifier</b>
+          <b>Enregistrer</b>
           </Typography>
           <Icon sx={{
             marginBottom:1.5
           }}>
-            <EditIcon />
+            <CheckIcon />
           </Icon>
           </Button>
           
@@ -466,13 +542,13 @@ const LivraisonEdit = () => {
          <DataGrid
         editMode="row"
         rows={aggregatedData.KG}
-        columns={Folumns}
+        columns={Kolumns}
         getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         />
          <DataGrid
         rows={aggregatedData.FOURNITURE}
-        columns={Kolumns}
+        columns={Folumns}
         getRowId={(row)=>row.id}
         components={{ Toolbar: GridToolbar }}
         editMode="row"

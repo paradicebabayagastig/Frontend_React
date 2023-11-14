@@ -21,9 +21,11 @@ const Pertes = () => {
         const [kilo,setKilo] = useState([])
         const [fourniture,setFourniture] = useState([])
 
+   
+
         const handleSuiteChange = (index) => (event) => {
           let newQuantity = event.target.value;
-          newQuantity = parseInt(newQuantity)
+          newQuantity = parseFloat(newQuantity)
           setSuite((prevSuite) => {
             return prevSuite.map((item) => {
               if (item.index === index) {
@@ -35,7 +37,7 @@ const Pertes = () => {
         }
         const handleKiloChange = (index) => (event) => {
           let newQuantity = event.target.value;
-          newQuantity = parseInt(newQuantity)
+          newQuantity = parseFloat(newQuantity)
           setKilo((prevKilo) => {
             return prevKilo.map((item) => {
               if (item.index === index) {
@@ -47,7 +49,7 @@ const Pertes = () => {
         }
         const handleFournitureChange = (index) => (event) => {
           let newQuantity = event.target.value;
-          newQuantity = parseInt(newQuantity)
+          newQuantity = parseFloat(newQuantity)
           setFourniture((prevFourniture) => {
             return prevFourniture.map((item) => {
               if (item.index === index) {
@@ -232,7 +234,8 @@ const Pertes = () => {
          
             <TextField
               type="number"
-              value={suite[params.row.index]?.quantity ?? 0}
+              value={parseFloat(suite[params.row.index]?.quantity ?? 0)}
+
               onChange={handleSuiteChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -244,7 +247,7 @@ const Pertes = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
      
@@ -272,7 +275,7 @@ const Pertes = () => {
          
             <TextField
               type="number"
-              value={kilo[params.row.index]?.quantity ?? 0}
+              value={parseFloat(kilo[params.row.index]?.quantity ?? 0)}
               onChange={handleKiloChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -284,7 +287,7 @@ const Pertes = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
      
@@ -312,7 +315,7 @@ const Pertes = () => {
          
             <TextField
               type="number"
-              value={fourniture[params.row.index]?.quantity ?? 0}
+              value={parseFloat(fourniture[params.row.index]?.quantity ?? 0)}
               onChange={handleFournitureChange(params.row.index)}
               variant="outlined"
               sx={{
@@ -324,7 +327,7 @@ const Pertes = () => {
               }}
               inputProps={{
                 min: 0,
-                step: 50,
+                step: 0.1,
               }}
             />
      

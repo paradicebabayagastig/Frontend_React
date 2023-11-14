@@ -25,10 +25,14 @@ const Home = () =>
     role = role.replace(/_/g, ' ');
     const [pertes,setpertes] = useState([]);
     const [commande,setCommande] = useState([]);
+    const[stock,setStock] = useState([]);
     const [data,setData] = useState([])
     const today = new Date()
     const year = today.getFullYear();
     const month = today.getMonth() + 1; // Adding 1 to get the correct month
+
+
+
     
     // Format the month as two digits (e.g., '01' for January, '12' for December)
     const formattedMonth = month < 10 ? `0${month}` : `${month}`;
@@ -39,6 +43,12 @@ const Home = () =>
     
     const [date, setDate] = useState(initialDate);
 
+    //states for checking order 
+    const [stockExists, setStockExists] = useState(false);
+    const [commandeExists, setSCommandeExists] = useState(false);
+
+
+    
 
     
     
@@ -76,7 +86,33 @@ const Home = () =>
   };
     
  
+  // fuction to check stock created 
+
+  const checkStockForToday = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/stocks/check/${authCtx.id}`,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const { hasStock } = response.data;
+      setStockExists(hasStock);
+    } catch (error) {
+      console.error("Error checking stock:", error);
+    }
+  };
   
+  
+
+
+
+
+
+
     const checkpertes = async ()=>{
       try{
         const response = await axios.get('http://localhost:3000/api/v1/pertes', {
@@ -124,118 +160,218 @@ const Home = () =>
     useEffect(()=>{
       checkpertes()
       checkCommande()
+      checkStockForToday()
     },[])
 
   
     
 
     const message = 'Hello, ' + role
-      const handleCreateCommande =()=>{
-        navigate('/commande');
-      };
-      return(
-      <Box>
-        <Box m="50px" >
-            <Header title={message} subtitle={name} />
-        </Box>
-      {
-        (role === 'Point de vente') && (
-          <Box display="flex" justifyContent="center">
-          { pertes.length === 0? 
-              <Box>
-            <Paper 
-              elevation={3}
-              sx={{
-                display:'flex',
-                flexDirection:'column',
-                justifyContent:'center',
-                margin:"50px",
-                padding: theme.spacing(2),
-                backgroundColor: colors.primary[400], // Transparent white background
-                maxWidth: '400px',
-              }}>
-              <Typography variant="body1">
-                Vous n'avez pas créé vos pertes pour aujourd'hui :{"("}
-              </Typography>
-              <Link to='/pertes'>
-              <Button variant="contained" sx={{
-                backgroundColor:colors.pinkAccent[400],
-                width:300,
-                marginTop:5,
-              }}>
-                Remplir Pertes
-              </Button>
-              </Link>
-              
-            </Paper>
-            </Box>:<Box>
-            <Paper 
-              elevation={3}
-              sx={{
-                display:'flex',
-                flexDirection:'column',
-                justifyContent:'center',
-                margin:"50px",
-                padding: theme.spacing(2),
-                backgroundColor: colors.primary[400], // Transparent white background
-                maxWidth: '400px',
-              }}>
-                <CheckCircleIcon sx={{
-                  fontSize:'50px',
-                  margin:'10px 100px 10px 100px'
-                }} />
-              <Typography variant="body1"> Vous avez créé vos pertes pour aujourd'hui!</Typography>
-            </Paper>
-            </Box>
-          }
-          { commande.length === 0?
-              <Box>
-            <Paper 
-              elevation={3}
-              sx={{
-                display:'flex',
-                flexDirection:'column',
-                justifyContent:'center',
-                margin:"50px",
-                padding: theme.spacing(2),
-                backgroundColor: colors.primary[400], // Transparent white background
-                maxWidth: '400px',
-              }}>
-              <Typography variant="body1">
-                Vous n'avez pas créé une Commande pour aujourd'hui :{"("}
-              </Typography>
-              <Button variant="contained" sx={{
-                marginTop:5,
-                backgroundColor:colors.pinkAccent[400]
-              }} onClick={handleCreateCommande}>
-                Créer une commande
-              </Button>
-            </Paper>
-            </Box>:<Box>
-            <Paper 
-              elevation={3}
-              sx={{
-                display:'flex',
-                flexDirection:'column',
-                justifyContent:'center',
-                margin:"50px",
-                padding: theme.spacing(2),
-                backgroundColor: colors.primary[400], // Transparent white background
-                maxWidth: '400px',
-              }}>
-                <CheckCircleIcon sx={{
-                  fontSize:'50px',
-                  margin:'10px 100px 10px 100px'
-                }} />
-              <Typography variant="body1"> Votre commande d'aujourd'hui est enregistrée.</Typography>
-            </Paper>
-            </Box>
-          }
     
+
+      const handleCreateCommande = () => {
+        if (stockExists) {
+          alert("Vous pouvez créé votre commande pour aujourd'hui.");
+          navigate('/commande');
+        } else {
+          alert("Vous devez créé un stock d'abord !");
+        }
+      };
+
+
+
+      const handleCreatePerte =()=>{
+        if (commandeExists) {
+          alert("Vous pouvez créé pertes pour aujourd'hui.");
+          navigate('/perte');
+        } else {
+          alert("Vous devez créé une commande d'abord !");
+        }
+      };
+
+      const handleCreateStock =()=>{
+        navigate('/stock');
+      };
+
+
+
+      return (
+        <Box>
+          <Box m="50px">
+            <Header title={message} subtitle={name} />
           </Box>
-        )
-      }
-     
+      
+          {(role === 'Point de vente') && (
+            <Box
+              display="flex"
+              justifyContent="center"
+              gap={10}  
+            >
+              {/* Stock Section */}
+              <div style={{ flex: 1 }}>
+                {stock.length === 0 ? (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      margin: "50px",
+                      padding: theme.spacing(2),
+                      backgroundColor: colors.primary[400],
+                      maxWidth: '400px',
+                    }}
+                  >
+                    <Typography variant="body1">
+                      Vous n'avez pas de stock pour aujourd'hui :{"("}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: colors.pinkAccent[400],
+                        width: 300,
+                        marginTop: 5,
+                      }}
+                      onClick={handleCreateStock}
+                    >
+                      Ajouter au Stock
+                    </Button>
+                  </Paper>
+                ) : (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      margin: "50px",
+                      padding: theme.spacing(2),
+                      backgroundColor: colors.primary[400],
+                      maxWidth: '400px',
+                    }}
+                  >
+                    <CheckCircleIcon
+                      sx={{
+                        fontSize: '50px',
+                        margin: '10px 100px 10px 100px',
+                      }}
+                    />
+                    <Typography variant="body1"> Vous avez du stock pour aujourd'hui!</Typography>
+                  </Paper>
+                )}
+              </div>
+      
+              {/* Commande Section */}
+              <div style={{ flex: 1 }}>
+                {commande.length === 0 ? (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      margin: "50px",
+                      padding: theme.spacing(2),
+                      backgroundColor: colors.primary[400],
+                      maxWidth: '400px',
+                    }}
+                  >
+                    <Typography variant="body1">
+                      Vous n'avez pas créé une Commande pour aujourd'hui :{"("}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        marginTop: 5,
+                        backgroundColor: colors.pinkAccent[400],
+                      }}
+                      onClick={handleCreateCommande}
+                    >
+                      Créer une commande
+                    </Button>
+                  </Paper>
+                ) : (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      margin: "50px",
+                      padding: theme.spacing(2),
+                      backgroundColor: colors.primary[400],
+                      maxWidth: '400px',
+                    }}
+                  >
+                    <CheckCircleIcon
+                      sx={{
+                        fontSize: '50px',
+                        margin: '10px 100px 10px 100px',
+                      }}
+                    />
+                    <Typography variant="body1"> Votre commande d'aujourd'hui est enregistrée.</Typography>
+                  </Paper>
+                )}
+              </div>
+      
+              {/* Pertes Section */}
+              <div style={{ flex: 1 }}>
+                {pertes.length === 0 ? (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      margin: "50px",
+                      padding: theme.spacing(2),
+                      backgroundColor: colors.primary[400],
+                      maxWidth: '400px',
+                    }}
+                  >
+                    <Typography variant="body1">
+                      Vous n'avez not created your losses for today :{"("}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: colors.pinkAccent[400],
+                        width: 300,
+                        marginTop: 5,
+                      }}
+                      onClick={handleCreatePerte}
+                    >
+                      Remplir Pertes
+                    </Button>
+                  </Paper>
+                ) : (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      margin: "50px",
+                      padding: theme.spacing(2),
+                      backgroundColor: colors.primary[400],
+                      maxWidth: '400px',
+                    }}
+                  >
+                    <CheckCircleIcon
+                      sx={{
+                        fontSize: '50px',
+                        margin: '10px 100px 10px 100px',
+                      }}
+                    />
+                    <Typography variant="body1"> Vous avez créé vos pertes pour aujourd'hui!</Typography>
+                  </Paper>
+                )}
+              </div>
+            </Box>
+          )}
+      
+      
+    
             
       <Box height="75vh" sx={{
         background:colors.primary[500]

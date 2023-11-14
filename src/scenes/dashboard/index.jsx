@@ -35,6 +35,7 @@ import CommandeInfo from "../invoices/commandes";
 import LivraisonEdit from "../livraison/modifyLivraison";
 import NotificationCenter from "../../components/notificationsCenter";
 import Pertes from "../pertes"
+import Stock from "../stock";
 
 
 
@@ -104,6 +105,7 @@ import Pertes from "../pertes"
                 <Route path="/livraison/info/:id" element={<LivraisonInfo />}  />
                 <Route path="/livraison/edit/:id" element={<LivraisonEdit />} />
                 <Route path="/pertes" element={<Pertes />} />
+                <Route path="/stock" element={<Stock />} />
               </Routes>
             </main>
           </div>

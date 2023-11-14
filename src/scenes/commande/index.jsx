@@ -25,6 +25,10 @@ const AddCommande = () => {
          const [dateLiv,setDateLiv] = useState('')
          const [open, setOpen] = useState(false);
          const [pdv,setPdv] = useState({});
+
+ //check commande added 
+ const [commandeCreated, setCommandeCreated] = useState(false);
+
          const handleOpen = () => setOpen(true);
          const handleClose = () => setOpen(false);
          const handleCreateLivraison = (async () => {

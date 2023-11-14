@@ -91,6 +91,9 @@ const FabricationInfo = () => {
                 pztPlaza: fabOrder.PztPlaza,
                 pztAzur: fabOrder.PztAzur,
                 pztSuitz: fabOrder.PztSuite,
+                fabricated: fabOrder.fabricated,
+                pztFabricated: fabOrder.PztFabricated,
+                qteSpecial: fabOrder.QteSpecial,
                 type: fabOrder.type,
                 class: produitResponse.data.class
               };
@@ -138,7 +141,7 @@ const FabricationInfo = () => {
     {
       id:1,
       field: "produit",
-      headerName: <b>PRODUIT</b>,
+      headerName: <b>SPECIAL</b>,
       flex: 0.125,
     },
     {
@@ -156,6 +159,23 @@ const FabricationInfo = () => {
       flex: 0.125,
       
     },
+    {
+      id:4,
+      field: "qteSpecial",
+      editable: true,
+      headerName: <b>QTE en KG</b>,
+      flex: 0.125,
+      
+    },
+    {
+      id:3, 
+      field: "fabricated",
+      editable: true,
+      headerName: <b>QTE FABRIQUE</b>,
+      flex: 0.125,
+      
+    },
+
     
 
   ]
@@ -163,7 +183,7 @@ const FabricationInfo = () => {
     {
       id:1,
       field: "produit",
-      headerName: <b>AUTRE BESOINS</b>,
+      headerName: <b>FOURNITURES</b>,
       flex: 0.125,
     },
     {
@@ -179,7 +199,7 @@ const FabricationInfo = () => {
     {
       id:1,
       field: "produit",
-      headerName: <b>PRODUIT</b>,
+      headerName: <b>GLACE  </b>,
       flex: 0.25,
     },
     {
@@ -220,7 +240,21 @@ const FabricationInfo = () => {
       editable: true,
       headerName:<b>POZZETI SUITE</b>,
       flex:0.25,
-    }
+    },
+    {
+      id:6,
+      field:"fabricated",
+      editable: true,
+      headerName:<b>QTE FABRIQUE</b>,
+      flex:0.25,
+    },
+    {
+      id:6,
+      field:"pztFabricated",
+      editable: true,
+      headerName:<b>POZZETI FABRIQUE</b>,
+      flex:0.25,
+    },
     ];
   return (
     <Box m="20px" ref={componentRef}>
@@ -283,9 +317,13 @@ const FabricationInfo = () => {
     
       <Box
         m="40px 0 0 0"
-        height="75vh"
+        height="150vh"
+        display='flex'
+        flexDirection='column'
+        gap={5}
         sx={{
-          display:"flex",
+
+          
           "& .MuiDataGrid-root": {
             borderColor: colors.primary[400],
           },
@@ -326,9 +364,6 @@ const FabricationInfo = () => {
           // components={{ Toolbar: GridToolbar }}
           hideScrollbarX // Hide horizontal scroll bar
           hideScrollbarY // Hide vertical scroll bar
-          sx={{
-            flex: 2.75
-          }}
           />
 
         ) : (
@@ -348,9 +383,6 @@ const FabricationInfo = () => {
          getRowId={(row)=>row.index}
          hideScrollbarX // Hide horizontal scroll bar
          hideScrollbarY // Hide vertical scroll bar
-         sx={{
-           flex: 2
-         }}
          />
         ): (
           <DataGrid 
@@ -371,9 +403,6 @@ const FabricationInfo = () => {
           getRowId={(row)=>row.index}
           hideScrollbarX = {true} // Hide horizontal scroll bar
           hideScrollbarY // Hide vertical scroll bar
-          sx={{
-            flex: 1.75
-          }}
           /> :  <DataGrid 
                 rows={[]}
                 columns={fournitureColumns}

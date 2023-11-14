@@ -206,6 +206,7 @@ const Invoices = () => {
       });
   
       const commandes = commandesResponse.data;
+      console.log("commandes : ",commandes)
       const filteredCommandes = role === 'POINT_DE_VENTE'
       ? commandes.filter(item => item.livraison === true && item.idPointVente === id)
       : commandes.filter(item => item.livraison === true);
@@ -218,7 +219,7 @@ const Invoices = () => {
             'Authorization': `Bearer ${token}`
           }
         });
-  
+        
         const firstBonCommande = bonCommandeResponse.data[0];
   
         // Fetch user data by ID
@@ -231,7 +232,7 @@ const Invoices = () => {
         });
   
         const dateCommande = commande.dateCommande.split('T')[0];
-        const dateLivraison = firstBonCommande.dateLivraison.split('T')[0];
+        const dateLivraison = firstBonCommande? firstBonCommande.dateLivraison.split('T')[0]:'undefined';
   
         // Create the object with the required properties
         const orderWithDetails = {
@@ -251,7 +252,8 @@ const Invoices = () => {
       // You can return the data or do something else with it
       return ordersWithDetails;
     } catch (err) {
-      console.log(err);
+      console.log('error : ',err);
+      
       // Handle errors here
     }
   }

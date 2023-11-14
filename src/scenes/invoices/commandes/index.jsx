@@ -131,7 +131,7 @@ const CommandeInfo = () => {
     {
       id:2,
       field: "produit",
-      headerName: <b>PRODUIT</b>,
+      headerName: <b>GLACE</b>,
       flex: 1,
       cellClassName:"quantity-column--cell"
     },
@@ -156,7 +156,7 @@ const CommandeInfo = () => {
       {
         id:2,
         field: "produit",
-        headerName: <b>PRODUIT</b>,
+        headerName: <b>SPECIAL</b>,
         flex: 1,
         cellClassName:"quantity-column--cell"
       },
@@ -173,7 +173,7 @@ const CommandeInfo = () => {
         {
           id:2,
           field: "produit",
-          headerName: <b>PRODUIT</b>,
+          headerName: <b>FOURNITURES</b>,
           flex: 1,
           cellClassName:"quantity-column--cell"
         },
