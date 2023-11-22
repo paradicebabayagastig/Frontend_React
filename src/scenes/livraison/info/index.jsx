@@ -7,7 +7,7 @@ import { useContext, useEffect, useState } from 'react';
 import {AuthContext} from "../../../contexts/Auth"
 import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
-import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
+import { useNavigate, useParams, Link } from 'react-router-dom'; // Import useHistory from react-router
 import EditIcon from '@mui/icons-material/Edit';
 
 const LivraisonInfo = () => {
@@ -24,6 +24,8 @@ const LivraisonInfo = () => {
           SUITE: [],
         });
         const [loading, setLoading] = useState(true);
+        const editLinkString = `/livraison/edit/${commandeId}`
+    
 
         const message = ("Information commande")
         async function fetchData() {
@@ -289,7 +291,9 @@ const LivraisonInfo = () => {
       justifyContent="space-between"
       >
         <Header title={message}  />
-        <Button sx={{
+        <Link to={editLinkString}>
+        <Button 
+        sx={{
           color:colors.primary[100],
           marginRight:5,
           backgroundColor:colors.primary[400],
@@ -312,6 +316,8 @@ const LivraisonInfo = () => {
             <EditIcon />
           </Icon>
           </Button>
+        </Link>
+        
           
       </Box>
       

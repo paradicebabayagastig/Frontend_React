@@ -22,42 +22,19 @@ const Stock = () => {
 
   
 
-    const handleSuiteChange = (index) => (event) => {
-        let newQuantity = event.target.value;
-        newQuantity = parseFloat(newQuantity);
-        setSuite((prevSuite) => {
-            return prevSuite.map((item) => {
-                if (item.index === index) {
-                    return { ...item, quantity: newQuantity };
-                }
-                return item;
-            });
+    const handleArrayChange = (setState, prevArray, index, field) => (event) => {
+      let newQuantity = parseFloat(event.target.value);
+    
+      setState((prevState) => {
+        return prevState.map((item) => {
+          if (item.index === index) {
+            return { ...item, [field]: newQuantity };
+          }
+          return item;
         });
-    }
-    const handleKiloChange = (index) => (event) => {
-        let newQuantity = event.target.value;
-        newQuantity = parseFloat(newQuantity);
-        setKilo((prevKilo) => {
-            return prevKilo.map((item) => {
-                if (item.index === index) {
-                    return { ...item, quantity: newQuantity };
-                }
-                return item;
-            });
-        });
-    }
-    const handleFournitureChange = (index) => (event) => {
-        let newQuantity = event.target.value;
-        newQuantity = parseFloat(newQuantity);
-        setFourniture((prevFourniture) => {
-            return prevFourniture.map((item) => {
-                if (item.index === index) {
-                    return { ...item, quantity: newQuantity };
-                }
-                return item;
-            });
-        });
-    }
+      });
+    };  
+    
 
     async function fetchData() {
         try {
@@ -93,6 +70,7 @@ const Stock = () => {
                         class: classProduit,
                         type: typeProduit,
                         quantity: 0,
+                        loss: 0,
                     });
                 } else if (typeProduit === "PARFUM" && classProduit !== "NORMAL") {
                     kiloArray.push({
@@ -102,6 +80,7 @@ const Stock = () => {
                         class: classProduit,
                         type: typeProduit,
                         quantity: 0,
+                        loss: 0,
                     });
                 } else if (typeProduit === "FOURNITURE") {
                     fournitureArray.push({
@@ -111,6 +90,7 @@ const Stock = () => {
                         class: classProduit,
                         type: typeProduit,
                         quantity: 0,
+                        loss: 0,
                     });
                 }
             });
@@ -123,18 +103,20 @@ const Stock = () => {
     }
 
     const handleSubmit = async () => {
-        const orderItemIds = [];
+        const stockItemIds = [];
 
         const axiosPromises = [];
 
         // Handle suite items
         Object.keys(suite).forEach(async (index) => {
-            if (suite[index].quantity !== 0) {
+            if ((suite[index].quantity !== 0)||(suite[index].loss !== 0)) {
                 console.log('Submitting suite item:', suite[index]);
 
-                const axiosPromise = axios.post('http://localhost:3000/api/v1/orderItem', {
-                    produitId: parseFloat(suite[index].idProduit),
+                const axiosPromise = axios.post('http://localhost:3000/api/v1/stockItem', {
+                    produitId: parseInt(suite[index].idProduit),
                     quantity: suite[index].quantity,
+                    loss: suite[index].loss,
+                    type:'SUITE'
                 }, {
                     withCredentials: true,
                     headers: {
@@ -149,12 +131,14 @@ const Stock = () => {
 
         // Handle kilo items
         Object.keys(kilo).forEach(async (index) => {
-            if (kilo[index].quantity !== 0) {
+            if ((kilo[index].quantity !== 0)||(kilo[index].loss !== 0)) {
                 console.log('Submitting kilo item:', kilo[index]);
 
-                const axiosPromise = axios.post('http://localhost:3000/api/v1/orderItem', {
+                const axiosPromise = axios.post('http://localhost:3000/api/v1/stockItem', {
                     produitId: parseFloat(kilo[index].idProduit),
                     quantity: kilo[index].quantity,
+                    loss: suite[index].loss,
+                    type:'SUITE'
                 }, {
                     withCredentials: true,
                     headers: {
@@ -174,9 +158,11 @@ const Stock = () => {
             if (fourniture[index].quantity !== 0) {
                 console.log('Submitting fourniture item:', fourniture[index]);
 
-                const axiosPromise = axios.post('http://localhost:3000/api/v1/orderItem', {
+                const axiosPromise = axios.post('http://localhost:3000/api/v1/stockItem', {
                     produitId: parseFloat(fourniture[index].idProduit),
                     quantity: fourniture[index].quantity,
+                    loss: suite[index].loss,
+                    type:'SUITE'
                 }, {
                     withCredentials: true,
                     headers: {
@@ -198,18 +184,18 @@ const Stock = () => {
         try {
           const results = await Promise.all(axiosPromises);
           console.log('Results from axios requests:', results);
-          console.log('orderItems: 1 ', orderItemIds);
+          console.log('orderItems: 1 ', stockItemIds);
           
 
             // Extract orderItemIds from the results
             results.forEach((createOrder) => {
-                orderItemIds.push(createOrder.data.idOrderItem);
+              stockItemIds.push(createOrder.data.idStockItem);
             });
 
-            console.log('orderItems 2 :', orderItemIds);
+            console.log('orderItems 2 :', stockItemIds);
             console.log('l   pointVenteId: ???', pointVenteId);
             const createStock = await axios.post('http://localhost:3000/api/v1/stocks', {
-              orderItemIds: orderItemIds,
+              stockItemIds: stockItemIds,
               pointVenteId: pointVenteId,
             }, {
                 withCredentials: true,
@@ -241,7 +227,7 @@ const Stock = () => {
     {
       id:3,
       field: "quantity",
-      headerName: <b>QTE</b>,
+      headerName: <b>STOCK FINAL</b>,
       flex: 1,
       // disabled:{bonCommande.type==="SUITE"},
       renderCell: (params) => (
@@ -251,7 +237,39 @@ const Stock = () => {
             <TextField
               type="number"
               value={parseFloat(suite[params.row.index]?.quantity ?? 0)}
-              onChange={handleSuiteChange(params.row.index)}
+              onChange={handleArrayChange(setSuite,suite,params.row.index,'quantity')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
+    },
+    {
+      id:4,
+      field: "loss",
+      headerName: <b>JETES</b>,
+      flex: 1,
+      // disabled:{bonCommande.type==="SUITE"},
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(suite[params.row.index]?.loss ?? 0)}
+              onChange={handleArrayChange(setSuite,suite,params.row.index,'loss')}
               variant="outlined"
               sx={{
                 width: 65,
@@ -281,7 +299,7 @@ const Stock = () => {
     {
       id:3,
       field: "quantity",
-      headerName: <b>QTE</b>,
+      headerName: <b>STOCK EN LITRES</b>,
       flex: 1,
       // disabled:{bonCommande.type==="SUITE"},
       renderCell: (params) => (
@@ -291,7 +309,39 @@ const Stock = () => {
             <TextField
               type="number"
               value={parseFloat(kilo[params.row.index]?.quantity ?? 0)}
-              onChange={handleKiloChange(params.row.index)}
+              onChange={handleArrayChange(setKilo,kilo,params.row.index,'quantity')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
+    },
+    {
+      id:4,
+      field: "loss",
+      headerName: <b>JETES</b>,
+      flex: 1,
+      // disabled:{bonCommande.type==="SUITE"},
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(kilo[params.row.index]?.loss ?? 0)}
+              onChange={handleArrayChange(setKilo,kilo,params.row.index,'loss')}
               variant="outlined"
               sx={{
                 width: 65,
@@ -321,7 +371,7 @@ const Stock = () => {
     {
       id:3,
       field: "quantity",
-      headerName: <b>QTE</b>,
+      headerName: <b>STOCK FINAL</b>,
       flex: 1,
       // disabled:{bonCommande.type==="SUITE"},
       renderCell: (params) => (
@@ -331,7 +381,7 @@ const Stock = () => {
             <TextField
               type="number"
               value={parseFloat(fourniture[params.row.index]?.quantity ?? 0)}
-              onChange={handleFournitureChange(params.row.index)}
+              onChange={handleArrayChange(setFourniture,fourniture,params.row.index,'quantity')}
               variant="outlined"
               sx={{
                 width: 65,

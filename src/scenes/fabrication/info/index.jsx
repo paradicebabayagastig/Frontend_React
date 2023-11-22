@@ -7,13 +7,14 @@ import { useContext, useEffect, useState } from 'react';
 import {AuthContext} from "../../../contexts/Auth"
 import axios from "axios"
 import { MenuItem } from "react-pro-sidebar";
-import { useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
+import { Link, useNavigate, useParams } from 'react-router-dom'; // Import useHistory from react-router
 import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print'
 import React from "react";
+import EditIcon from '@mui/icons-material/Edit';
 
 const FabricationInfo = () => {
-   
+
       const params = useParams();
       const bonfabricationId = parseInt(params.id);
       const componentRef = React.useRef();
@@ -33,6 +34,7 @@ const FabricationInfo = () => {
         const [success, setSuccess] = useState(false);
         const [bf,setBf] = useState({})
         const navigate = useNavigate();
+        const editString = `/fabrication/edit/${bonfabricationId}`
 
         const message = ("Bon Fabrication ")
 
@@ -279,19 +281,62 @@ const FabricationInfo = () => {
           />
         </Box>
       ) }
-      <Box display="flex">
+      <Box display="flex" justifyContent='space-between'>
       <Header title={message} />
-      <IconButton 
-      onClick={handlePrint}
-      sx={{
-          marginLeft:'auto',
+      <Box display='flex'>
+      <Button onClick={handlePrint} sx={{
+          color:colors.primary[100],
+          marginRight:5,
+          backgroundColor:colors.primary[400],
+          display:"flex",
+          justifyContent:"center",
+          marginRight:5,
+          marginBottom:5,
+          gap:1.5,
           "&:hover":{
-            background:'FFFFFF',
-            color: colors.pinkAccent[400]
-          },
-      }} >
-        <PrintIcon />
-      </IconButton>
+            backgroundColor:colors.pinkAccent[400]
+          }
+        }}>
+         
+          <Typography>
+          <b>IMPRIMER</b>
+          </Typography>
+          <Icon sx={{
+            marginBottom:1.5
+          }}>
+            <PrintIcon />
+          </Icon>
+          
+          </Button>
+          <Link to={editString}>
+          <Button sx={{
+          color:colors.primary[100],
+          marginRight:5,
+          backgroundColor:colors.primary[400],
+          display:"flex",
+          justifyContent:"center",
+          marginRight:5,
+          marginBottom:5,
+          gap:1.5,
+          "&:hover":{
+            backgroundColor:colors.pinkAccent[400]
+          }
+        }}>
+         
+          <Typography>
+          <b>Modifier</b>
+          </Typography>
+          <Icon sx={{
+            marginBottom:1.5
+          }}>
+            <EditIcon />
+          </Icon>
+          </Button>
+          </Link>
+      
+
+      </Box>
+      
 
         
       </Box>

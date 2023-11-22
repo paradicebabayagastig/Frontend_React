@@ -1,4 +1,4 @@
-import { Box, Checkbox, FormControlLabel, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, Icon, IconButton, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -11,6 +11,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import CloseIcon from '@mui/icons-material/Close';
+import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 const Invoices = () => {
   const authCtx = useContext(AuthContext)
   const token = authCtx.isAuthenticated
@@ -81,75 +83,40 @@ const Invoices = () => {
       id:4,
       field: "dateLivraison",
       headerName: "Date Livraison",
-      flex: 1,
+      flex: 0.25,
+    },
+    {
+      id:5,
+      headerName: "Validation Reception",
+      flex: 0.25,
+      cellClassName: "point-column--cell",
       renderCell: (params) => (
         <Box
         display="flex"
-        gap={2}
+        gap={0.25}
         alignItems="center"
         >
-          <Typography>
-            {params.row.dateLivraison}
-          </Typography>
-          <FormControlLabel
-              sx={{
-                
-                color: colors.primary[100], // Apply the color based on the state
-              }}
-              control={
-                <Checkbox
-                  name="loading"
-                 // Apply the color based on the state
-                  checked={params.row.validationReception}
-                  onChange={() => handleChange(params.row.idCommande)}
-                   // Disable the switch once it's pressed
-                   color="default"
-                   sx={{
-                    color:colors.pinkAccent[200],
-                    marginLeft:5,
-                   }}
-                    disabled={role === 'POINT_DE_VENTE'? false : true}
-                />
-              }
-              label='Reception'
-              />
-          {/* <Link to={`/livraison/info/${params.row.idBonLivraison}`}>
-            <Button
-            sx={{
-              background:colors.primary[400],
-              color:colors.primary[100]
-            }}
-            >
-              MORE INFO
-            </Button>
-          </Link> */}
-          <Link to={`/livraison/info/${params.row.idCommande}`}>
-
-            <IconButton
-            variant="outlined"
-            sx={{
-              marginLeft:10,
-              backgroundColor:colors.primary[400],
-              color:colors.primary[100],
-              "&:hover": {
-                backgroundColor: colors.button[100], // Change background color on hover
-                color: colors.button[200], // Change text color on hover
-              },
-            }}
-            >
+          {params.row.validationReception? (<Icon><ThumbUpAltIcon/></Icon>):(<Icon><CloseIcon/></Icon>)}
           
-                <RemoveRedEyeIcon />
-            
-            </IconButton>
-            
-           
-          </Link>
-          <Link to={`/livraison/edit/${params.row.idCommande}`}>
+        </Box>
+      )
+
+    },
+    {
+      id:4,
+      field: "Action",
+      headerName: "Action",
+      flex: 0.25,
+      renderCell: (params) => 
+        <Box
+       
+        
+        >
+          <Link to={`/livraison/info/${params.row.idCommande}`}>
 
           <IconButton
           variant="outlined"
           sx={{
-            
             backgroundColor:colors.primary[400],
             color:colors.primary[100],
             "&:hover": {
@@ -159,7 +126,7 @@ const Invoices = () => {
           }}
           >
 
-              <EditNoteIcon />
+              <RemoveRedEyeIcon />
 
           </IconButton>
 
@@ -170,25 +137,24 @@ const Invoices = () => {
           <IconButton
           variant="outlined"
           sx={{
-           
-            backgroundColor:colors.primary[400],
-            color:colors.primary[100],
-            "&:hover": {
-              backgroundColor: colors.button[100], // Change background color on hover
-              color: colors.button[200], // Change text color on hover
-            },
+            marginLeft:2,
+          backgroundColor:colors.primary[400],
+          color:colors.primary[100],
+          "&:hover": {
+            backgroundColor: colors.button[100], // Change background color on hover
+            color: colors.button[200], // Change text color on hover
+          },
           }}
           >
 
-              <DeleteIcon />
+            <DeleteIcon />
 
           </IconButton>
 
 
           </Link>
         </Box>
-      )
-
+      
     },
   
 

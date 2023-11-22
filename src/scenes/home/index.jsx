@@ -23,10 +23,6 @@ const Home = () =>
     const colors = tokens(theme.palette.mode);
     role = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
     role = role.replace(/_/g, ' ');
-    const [pertes,setpertes] = useState([]);
-    const [commande,setCommande] = useState([]);
-    const[stock,setStock] = useState([]);
-    const [data,setData] = useState([])
     const today = new Date()
     const year = today.getFullYear();
     const month = today.getMonth() + 1; // Adding 1 to get the correct month
@@ -44,8 +40,8 @@ const Home = () =>
     const [date, setDate] = useState(initialDate);
 
     //states for checking order 
-    const [stockExists, setStockExists] = useState(false);
-    const [commandeExists, setSCommandeExists] = useState(false);
+    const [stockExists, setStockExists] = useState();
+    const [commandeExists, setCommandeExists] = useState();
 
 
     
@@ -100,56 +96,31 @@ const Home = () =>
         }
       );
       const { hasStock } = response.data;
+      console.log("test stock :",hasStock)
       setStockExists(hasStock);
     } catch (error) {
       console.error("Error checking stock:", error);
     }
   };
+
   
   
 
 
 
 
-
-
-    const checkpertes = async ()=>{
-      try{
-        const response = await axios.get('http://localhost:3000/api/v1/pertes', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json', 
-          }
-        })
-          const allpertess = response.data;
-          const today = new Date().toISOString();
-          const filteredpertess = allpertess.filter(pertes => 
-            pertes.pointDeVenteId === authCtx.id && pertes.datePerte.slice(0,10) === today.slice(0,10)
-          );
-          console.log("today",filteredpertess);
-        setpertes(filteredpertess);
-        
-      }catch(error) {
-          console.error('Error fetching pertess:', error);
-      }
-      
-    }
 
     const checkCommande = async ()=>{
       try{
-        const response = await axios.get('http://localhost:3000/api/v1/commandes', {
+        const response = await axios.get(`http://localhost:3000/api/v1/commandes/check/${authCtx.id}`, {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json', 
           }
         })
-          const allCommandes = response.data;
-          const today = new Date().toISOString();
-          const filteredCommandes = allCommandes.filter(commande => 
-            commande.idPointVente === authCtx.id && commande.dateCommande.slice(0,10) === today.slice(0,10)
-          );
-          console.log("today",today.slice(0,10));
-        setCommande(filteredCommandes);
+          const commandeId = response.data.hasCommande;
+          console.log("today",commandeId);
+        setCommandeExists(commandeId);
         
       }catch(error) {
           console.error('Error fetching pertess:', error);
@@ -158,12 +129,13 @@ const Home = () =>
     }
 
     useEffect(()=>{
-      checkpertes()
       checkCommande()
       checkStockForToday()
     },[])
 
-  
+  useEffect(()=> {
+    console.log('test commande existance : ', commandeExists)
+  },[commandeExists])
     
 
     const message = 'Hello, ' + role
@@ -180,14 +152,7 @@ const Home = () =>
 
 
 
-      const handleCreatePerte =()=>{
-        if (commandeExists) {
-          alert("Vous pouvez créé pertes pour aujourd'hui.");
-          navigate('/perte');
-        } else {
-          alert("Vous devez créé une commande d'abord !");
-        }
-      };
+     
 
       const handleCreateStock =()=>{
         navigate('/stock');
@@ -209,7 +174,7 @@ const Home = () =>
             >
               {/* Stock Section */}
               <div style={{ flex: 1 }}>
-                {stock.length === 0 ? (
+                {stockExists===null? (
                   <Paper
                     elevation={3}
                     sx={{
@@ -246,7 +211,7 @@ const Home = () =>
                       justifyContent: 'center',
                       margin: "50px",
                       padding: theme.spacing(2),
-                      backgroundColor: colors.primary[400],
+                      backgroundColor: colors.pinkAccent[500],
                       maxWidth: '400px',
                     }}
                   >
@@ -256,14 +221,25 @@ const Home = () =>
                         margin: '10px 100px 10px 100px',
                       }}
                     />
-                    <Typography variant="body1"> Vous avez du stock pour aujourd'hui!</Typography>
+                    <Typography variant="body1"> Vous avez deja rempli stock pour aujourd'hui!</Typography>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: '#000000',
+                        width: 300,
+                        marginTop: 5,
+                      }}
+                      onClick={handleCreateStock}
+                    >
+                      Voir Stock
+                    </Button>
                   </Paper>
                 )}
               </div>
       
               {/* Commande Section */}
               <div style={{ flex: 1 }}>
-                {commande.length === 0 ? (
+                {commandeExists===null? (
                   <Paper
                     elevation={3}
                     sx={{
@@ -299,7 +275,7 @@ const Home = () =>
                       justifyContent: 'center',
                       margin: "50px",
                       padding: theme.spacing(2),
-                      backgroundColor: colors.primary[400],
+                      backgroundColor: colors.pinkAccent[500],
                       maxWidth: '400px',
                     }}
                   >
@@ -310,63 +286,25 @@ const Home = () =>
                       }}
                     />
                     <Typography variant="body1"> Votre commande d'aujourd'hui est enregistrée.</Typography>
+                    <Link to={``}>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: '#000000',
+                        width: 300,
+                        marginTop: 5,
+                      }}
+                    >
+                      Voir Commande
+                    </Button>
+                    </Link>
+                    
                   </Paper>
                 )}
               </div>
       
               {/* Pertes Section */}
-              <div style={{ flex: 1 }}>
-                {pertes.length === 0 ? (
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      margin: "50px",
-                      padding: theme.spacing(2),
-                      backgroundColor: colors.primary[400],
-                      maxWidth: '400px',
-                    }}
-                  >
-                    <Typography variant="body1">
-                      Vous n'avez not created your losses for today :{"("}
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      sx={{
-                        backgroundColor: colors.pinkAccent[400],
-                        width: 300,
-                        marginTop: 5,
-                      }}
-                      onClick={handleCreatePerte}
-                    >
-                      Remplir Pertes
-                    </Button>
-                  </Paper>
-                ) : (
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      margin: "50px",
-                      padding: theme.spacing(2),
-                      backgroundColor: colors.primary[400],
-                      maxWidth: '400px',
-                    }}
-                  >
-                    <CheckCircleIcon
-                      sx={{
-                        fontSize: '50px',
-                        margin: '10px 100px 10px 100px',
-                      }}
-                    />
-                    <Typography variant="body1"> Vous avez créé vos pertes pour aujourd'hui!</Typography>
-                  </Paper>
-                )}
-              </div>
+              
             </Box>
           )}
       

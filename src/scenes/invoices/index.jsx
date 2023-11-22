@@ -15,6 +15,9 @@ import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import ArticleIcon from '@mui/icons-material/Article';
 import SettingsIcon from '@mui/icons-material/Settings';
+import DoneOutlineIcon from '@mui/icons-material/DoneOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 const Invoices = () => {
   
   const navigate = useNavigate()
@@ -39,7 +42,7 @@ const Invoices = () => {
       id:1,
       field: "reference",
       headerName: "Reference",
-      flex: 0.5,
+      flex: 0.25,
       cellClassName: "name-column--cell",
       
     },
@@ -55,22 +58,22 @@ const Invoices = () => {
       id:3,
       field: "dateCommande",
       headerName: "Date",
-      flex: 1,
+      flex: 0.5,
+    },
+    {
+      id:4,
+      field:'test',
+      headerName: "Fabrication/Libraison",
+      flex: 0.5,
+      cellClassName: "point-column--cell",
       renderCell: (params) => (
         <Box 
-        sx={{
-          display:"flex",
-          justifyContent:"space-between",
-          alignItems:"center"
-          
-        }}
-        >
-          <Typography >
-            {params.row.dateCommande}
-          </Typography>
-          <FormControlLabel
+          display='flex'
+          flexDirection='row'
+          gap={5}
+          >
+          {/* <FormControlLabel
               sx={{
-                marginLeft:10,
                 color: colors.pinkAccent[400], // Apply the color based on the state
               }}
               control={
@@ -93,9 +96,12 @@ const Invoices = () => {
                 />
               }
               label="fabriqué"
-              />
+              /> */}
+              {params.row.checkFabrication? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)}
+              {params.row.livraison? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)}
+              
 
-              <FormControlLabel
+              {/* <FormControlLabel
               sx={{
                 
                 color: colors.pinkAccent[400], // Apply the color based on the state
@@ -114,73 +120,64 @@ const Invoices = () => {
                 />
               }
               label="livré"
-              />
-          <Link to={`/commande/${params.row.idCommande}`}>
-
-            <IconButton
-            variant="outlined"
-            sx={{
-              marginLeft:10,
-              backgroundColor:colors.primary[400],
-              color:colors.primary[100],
-              "&:hover": {
-                backgroundColor: colors.button[100], // Change background color on hover
-                color: colors.button[200], // Change text color on hover
-              },
-            }}
-            >
-          
-                <ArticleIcon />
-            
-            </IconButton>
-            
-           
-          </Link>
-          <Link to={`/modifierCommande/${params.row.idCommande}`}>
-
-          <IconButton
-          variant="outlined"
-          sx={{
-            marginLeft:2,
-            backgroundColor:colors.primary[400],
-            color:colors.primary[100],
-            "&:hover": {
-              backgroundColor: colors.button[100], // Change background color on hover
-              color: colors.button[200], // Change text color on hover
-            },
-          }}
-          >
-
-              <SettingsIcon />
-
-          </IconButton>
-
-
-          </Link>
-          <Link>
-
-          <IconButton
-          variant="outlined"
-          sx={{
-            marginLeft:2,
-            backgroundColor:colors.primary[400],
-            color:colors.primary[100],
-            "&:hover": {
-              backgroundColor: colors.button[100], // Change background color on hover
-              color: colors.button[200], // Change text color on hover
-            },
-          }}
-          >
-
-              <DeleteIcon />
-
-          </IconButton>
-
-
-          </Link>
+              /> */}
         </Box>
-        )
+      )
     },
+    
+    {
+      id: 5,
+      headerName: "Action",
+      flex: 0.25,
+      renderCell: (params) =>  <Box sx={{
+        float:"right"
+      }}>
+  <Link to={`/commande/${params.row.idCommande}`}>
+
+    <IconButton
+    variant="outlined"
+    sx={{
+      backgroundColor:colors.primary[400],
+      color:colors.primary[100],
+      "&:hover": {
+        backgroundColor: colors.button[100], // Change background color on hover
+        color: colors.button[200], // Change text color on hover
+      },
+    }}
+    >
+  
+        <RemoveRedEyeIcon />
+    
+    </IconButton>
+    
+   
+  </Link>
+
+  <Link>
+
+  <IconButton
+  variant="outlined"
+  sx={{
+    marginLeft:2,
+    backgroundColor:colors.primary[400],
+    color:colors.primary[100],
+    "&:hover": {
+      backgroundColor: colors.button[100], // Change background color on hover
+      color: colors.button[200], // Change text color on hover
+    },
+  }}
+  >
+
+      <DeleteIcon />
+
+  </IconButton>
+
+
+  </Link>
+  </Box>,
+    },
+    
+
   
 
   ];

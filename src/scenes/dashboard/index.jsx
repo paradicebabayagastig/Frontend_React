@@ -28,14 +28,16 @@ import RespSidebar from "../global/SideBars/respSideBar";
 import ConsultantSideBar from "../global/SideBars/consultantSideBar";
 import LivraisonInfo from "../livraison/info";
 import FabricationInfo from "../fabrication/info";
+import FabricationEdit from "../fabrication/edit";
 import MesLivraisons from "../livraison/mesLivraisons";
 import pertes from "../pertes";
 import Points from "../pointVentes";
 import CommandeInfo from "../invoices/commandes";
-import LivraisonEdit from "../livraison/modifyLivraison";
+import LivraisonEdit from "../livraison/edit";
 import NotificationCenter from "../../components/notificationsCenter";
 import Pertes from "../pertes"
 import Stock from "../stock";
+
 
 
 
@@ -124,6 +126,7 @@ import Stock from "../stock";
                 <Route path="/modifierCommande/:id" element={<AddCommande />} />
                 <Route path="/fabrication" element={<BonFabrications />} />
                 <Route path="/fabrication/info/:id" element={<FabricationInfo />} />
+                <Route path="/fabrication/edit/:id" element={<FabricationEdit />} />
                 <Route path="/bonCommande/info/:id" element={<Bcinfo />} />
                 <Route path="/livraison" element={<Livraison />}  />
                 <Route path="/livraison/info/:id" element={<LivraisonInfo />}  />

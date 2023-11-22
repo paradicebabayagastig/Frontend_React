@@ -33,25 +33,31 @@ const LivraisonEdit = () => {
         const handleFieldChange = (arrayType, index, field, newValue) => {
           // Parse the value to ensure it's a float
           const parsedValue = parseFloat(newValue);
-      
+        
           const updatedArray = [...aggregatedData[arrayType]];
           const modifiedRow = { ...updatedArray[index] };
           modifiedRow[field] = parsedValue;
-      
+        
+          // Omit the "index" property from modifiedRow
+          const modifiedRowWithoutIndex = Object.entries(modifiedRow)
+            .filter(([key]) => key !== 'index')
+            .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+        
           setModifiedRows({
-              ...modifiedRows,
-              [arrayType]: {
-                  ...modifiedRows[arrayType],
-                  [index]: modifiedRow,
-              },
+            ...modifiedRows,
+            [arrayType]: {
+              ...modifiedRows[arrayType],
+              [index]: modifiedRowWithoutIndex,
+            },
           });
-      
+        
           updatedArray[index] = modifiedRow;
           setAggregatedData({
-              ...aggregatedData,
-              [arrayType]: updatedArray,
+            ...aggregatedData,
+            [arrayType]: updatedArray,
           });
-      };
+        };
+        
       
       const handleSubmit = async () => {
         try {
@@ -66,8 +72,12 @@ const LivraisonEdit = () => {
                 for (const index of orderIndices) {
                     const order = orderObjects[index];
                     const patchPromise = axios.patch(
-                        `http://localhost:3000/api/v1/orderItem/${order.id}`,
-                        order,
+                        `http://localhost:3000/api/v1/orderItem/${order.idOrderItem}`,
+                        {
+                          ecart:order.ecart,
+                          QteLivre:order.QteLivre,
+                          feedback:order.feedback
+                        },
                         {
                             withCredentials: true,
                             headers: {
@@ -143,7 +153,7 @@ const LivraisonEdit = () => {
                   if (!categorizedOrders[type][key]) {
                     categorizedOrders[type][key] = {
                       index: index[type],
-                      id: order.idOrderItem,
+                      idOrderItem: order.idOrderItem,
                       produit: produitResponse.data.nomProduit,
                       class: produitResponse.data.class,
                       type: produitResponse.data.type,
@@ -220,9 +230,17 @@ const LivraisonEdit = () => {
       headerName: <b>QTE LIVRAISON</b>,
       flex: 0.5,
       renderCell: (params) => (
-        <Box sx={{ height: 50 }}>
-        { (
-         
+        <Box 
+        display='flex'
+        alignItems='center'
+        sx={{ height: 50 }}>
+        { (role === 'POINT_DE_VENTE')?
+            (
+          <Typography>
+            {aggregatedData.SUITE[params.row.index]?.QteLivre ?? 0}
+          </Typography>
+            ):
+            (
             <TextField
               type="number"
               value={parseFloat(aggregatedData.SUITE[params.row.index]?.QteLivre ?? 0)}
@@ -239,9 +257,7 @@ const LivraisonEdit = () => {
                 min: 0,
                 step: 0.1,
               }}
-            />
-     
-        ) }
+            />)}
       </Box>
         )
 
@@ -252,9 +268,16 @@ const LivraisonEdit = () => {
       headerName: <b>ECART</b>,
       flex: 0.5,
       renderCell: (params) => (
-        <Box sx={{ height: 50 }}>
-        { (
-         
+        <Box 
+        display='flex'
+        alignItems='center'
+        sx={{ height: 50 }}>
+        { (role === 'POINT_DE_VENTE')?
+        (
+        <Typography>
+          {aggregatedData.SUITE[params.row.index]?.ecart ?? 0}
+        </Typography>
+        ):(
             <TextField
               type="number"
               value={parseFloat(aggregatedData.SUITE[params.row.index]?.ecart ?? 0)}
@@ -284,7 +307,38 @@ const LivraisonEdit = () => {
       field: "feedback",
       headerName: <b>FEEDBACK</b>,
       flex: 0.5,
-      cellClassName:"quantity-column--cell"
+      renderCell: (params) => (
+        <Box 
+        display='flex'
+        alignItems='center'
+        sx={{ height: 50 }}>
+        { (role === 'POINT_DE_VENTE')?
+        (
+          <TextField
+            type="number"
+            value={parseFloat(aggregatedData.SUITE[params.row.index]?.feedback ?? 0)}
+            onChange={(e) => handleFieldChange('SUITE',params.row.index,'feedback', e.target.value)}
+            variant="outlined"
+            sx={{
+              width: 85,
+              '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                '-webkit-appearance': 'none',
+                margin: 0,
+              },
+            }}
+            inputProps={{
+              min: 0,
+              step: 0.1,
+            }}
+          />
+   
+      ):(
+        <Typography>
+          {aggregatedData.SUITE[params.row.index]?.feedback ?? 0}
+        </Typography>
+        ) }
+      </Box>
+        )
 
     },
 
@@ -536,20 +590,20 @@ const LivraisonEdit = () => {
         editMode="row"
         rows={aggregatedData.SUITE}
         columns={columns}
-        getRowId={(row)=>row.id}
+        getRowId={(row)=>row.idOrderItem}
         components={{ Toolbar: GridToolbar }}
         />
          <DataGrid
         editMode="row"
         rows={aggregatedData.KG}
         columns={Kolumns}
-        getRowId={(row)=>row.id}
+        getRowId={(row)=>row.idOrderItem}
         components={{ Toolbar: GridToolbar }}
         />
          <DataGrid
         rows={aggregatedData.FOURNITURE}
         columns={Folumns}
-        getRowId={(row)=>row.id}
+        getRowId={(row)=>row.idOrderItem}
         components={{ Toolbar: GridToolbar }}
         editMode="row"
         />
