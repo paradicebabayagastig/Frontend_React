@@ -10,26 +10,31 @@ const BarChart = ({date}) => {
     const colors = tokens(theme.palette.mode);
     const [dataStat,setDataStat] = useState([])
   
-    const getMonthStartAndEndDates = (date) => {
-        // Split the date string into year and month parts
-        const [year, month] = date.split('-').map(Number);
-      
-        // Calculate the last day of the month
-        const lastDay = new Date(year, month, 0).getDate();
-      
-        // Format the month and day as two digits
-        const formattedMonth = month < 10 ? `0${month}` : `${month}`;
-        const formattedLastDay = lastDay < 10 ? `0${lastDay}` : `${lastDay}`;
-      
-        // Construct the start and end dates
-        const startDate = `${year}-${formattedMonth}-01`;
-        const endDate = `${year}-${formattedMonth}-${formattedLastDay}`;
-      
-        return { startDate, endDate };
-      };
+    const getMonthStartAndMiddleDates = (date) => {
+      // Split the date string into year and month parts
+      const [year, month] = date.split('-').map(Number);
+  
+      // Calculate the last day of the month
+      const lastDay = new Date(year, month, 0).getDate();
+  
+      // Calculate the middle day of the month
+      const middleDay = Math.ceil(lastDay / 2);
+  
+      // Format the month, middle day, and last day as two digits
+      const formattedMonth = month < 10 ? `0${month}` : `${month}`;
+      const formattedMiddleDay = middleDay < 10 ? `0${middleDay}` : `${middleDay}`;
+      const formattedLastDay = lastDay < 10 ? `0${lastDay}` : `${lastDay}`;
+  
+      // Construct the start and middle dates
+      const startDate = `${year}-${formattedMonth}-01`;
+      const middleDate = `${year}-${formattedMonth}-${formattedMiddleDay}`;
+      const endDate = `${year}-${formattedMonth}-${formattedLastDay}`;
+  
+      return { startDate, middleDate, endDate };
+  };
     async function fetchData(){
         try {
-          const { startDate, endDate } = getMonthStartAndEndDates(date);
+          const { startDate, middleDate , endDate } = getMonthStartAndMiddleDates(date);
           const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes',{
             withCredentials:true,
             headers: {
@@ -37,13 +42,7 @@ const BarChart = ({date}) => {
             }
           })
           const stats = await Promise.all(pointVentes.data.map(async (point) => {
-            const orderItem = await axios.get(`http://localhost:3000/api/v1/stats/orders/?startDate=${startDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`,{
-              withCredentials:true,
-              headers: {
-                'Content-Type': 'application/json', 
-              }
-            })
-            const pertes = await axios.get(`http://localhost:3000/api/v1/stats/pertes/?startDate=${startDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`,{
+            const orderItem = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${middleDate}&pointVenteId=${point.idPointVente}`,{
               withCredentials:true,
               headers: {
                 'Content-Type': 'application/json', 
@@ -51,10 +50,7 @@ const BarChart = ({date}) => {
             })
             const stat = {
               index:point.nomPointVente,
-              "orders": orderItem.data,
-              "ordersColor":"blue",
-              "lost": pertes.data,
-              "lostColor":"hsl(229, 70%, 50%)"
+              "consommation-réel": orderItem.data,
             }
             return stat
           }))
@@ -136,7 +132,7 @@ const BarChart = ({date}) => {
           },
         },
       }}
-      keys={["orders", "lost"]}
+      keys={["consommation-réel"]}
       indexBy="index"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}

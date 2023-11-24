@@ -1,5 +1,6 @@
 import { Box, Checkbox, FormControlLabel, Icon, IconButton, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
+import React from 'react'
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
@@ -21,11 +22,119 @@ const Invoices = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [data,setData] = useState([]); 
-  const [selectedRows, setSelectedRows] = useState([]);
-  const handleSelectionChange = (newSelection) => {
-    setSelectedRows(newSelection);
-    console.log('Selected Rows:', newSelection.map((id) => data.find((row) => row.idBonLivraison === id)));
+
+ 
+ // for the soorttt arrow 
+ const [sortModel, setSortModel] = React.useState([{ field: 'dateCommande', sort: 'desc' }]);
+ const handleSortModelChange = (newModel) => {
+   setSortModel(newModel);
+ };
+
+  const [isDeleteButtonVisible, setIsDeleteButtonVisible] = useState(false);
+
+ //selected rows for delete all
+ const [selectedRows, setSelectedRows] = useState([]);
+const [isAnyRowSelected, setIsAnyRowSelected] = useState(false);
+
+
+const handleSelectionChange = (newSelection) => {
+  console.log('New selection aaa:', newSelection);
+  setSelectedRows(newSelection);
+
+  setIsAnyRowSelected(newSelection.length > 0);
+
+  console.log('Current 11:', newSelection);
+  console.log('Current 22:', newSelection.length > 0);
+};
+
+
+// delete bon livraison by makinng livraison false and removing the row 
+const handleDelete = async (idCommande) => {
+  console.log(' idCommande:', idCommande);
+
+  try {
+    await axios.patch(`http://localhost:3000/api/v1/commandes/delete/${idCommande}`, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+// remove it 
+    setData((prevData) => prevData.filter((row) => {
+      if (row.idCommande === idCommande) {
+        return false; 
+      }
+      return true;
+    }));
+
+    console.log('deleted successfully.');
+  } catch (error) {
+    console.error('Error deletingg:', error);
+    console.log('Server response:', error.response);
+  }
+};
+
+//delete all 
+const handleDeleteAll = async () => {
+  console.log('isAnyRowSelected:', isAnyRowSelected);
+  console.log('selectedRows:', selectedRows);
+
+  if (!isAnyRowSelected) {
+    console.log('No rows selected.');
+    return;
+  }
+
+  const selectedIds = selectedRows.map((row) => row.idCommande);
+
+  try {
+    await axios.patch('http://localhost:3000/api/v1/commandes/deleteAll', {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      data: {
+        ids: selectedIds,
+      },
+    });
+
+    setData((prevData) => prevData.filter((row) => !selectedIds.includes(row.idCommande)));
+
+    console.log('Rows deleted successfully.');
+
+    setSelectedRows([]);
+    setIsAnyRowSelected(false);
+    setIsDeleteButtonVisible(false); 
+  } catch (error) {
+    console.error('Error delete all:', error);
+  }
+};
+
+  //indication change if viewed
+  const handleViewBon = async (commandId) => {
+    try {
+      await axios.patch(
+        `http://localhost:3000/api/v1/commandes/${commandId}/stateBon`,
+        {
+          stateBonLivraison: 'seen',
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log('Update successful.');
+    } catch (error) {
+      console.error(error);
+    }
   };
+  
+  
 
   const handleChange = async (idCommande) => {
     try {
@@ -62,6 +171,7 @@ const Invoices = () => {
       field: "reference",
       headerName: "reference",
       flex: 0.5,
+      sortable: false,
       cellClassName: "name-column--cell",
       
     },
@@ -71,6 +181,7 @@ const Invoices = () => {
       field: "point",
       headerName: "Point de vente",
       flex: 0.5,
+      sortable: false,
       cellClassName:"point-column--cell"
     },
     {
@@ -78,6 +189,7 @@ const Invoices = () => {
       field: "dateCommande",
       headerName: "Date Commande",
       flex: 0.25,
+      renderCell: (params) => <Typography>{params.row.dateCommande.toLocaleDateString()}</Typography>,
     },
     {
       id:4,
@@ -124,6 +236,11 @@ const Invoices = () => {
               color: colors.button[200], // Change text color on hover
             },
           }}
+          onClick={() => {
+            if (role === 'POINT_DE_VENTE') {
+              handleViewBon(params.row.idCommande);
+            }
+          }}
           >
 
               <RemoveRedEyeIcon />
@@ -145,11 +262,37 @@ const Invoices = () => {
             color: colors.button[200], // Change text color on hover
           },
           }}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+           
+            handleDelete(params.row.idCommande);
+          }}
           >
 
             <DeleteIcon />
 
           </IconButton>
+
+          {role === 'POINT_DE_VENTE' && (
+          <Box
+  sx={{
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    backgroundColor: (() => {
+      if (params.row.stateBonLivraison === 'new') {
+        return 'green';
+      } else if (params.row.stateBonLivraison === 'updated') {
+        return 'red'; 
+      } else {
+        return 'grey'; 
+      }
+    })(),
+    marginLeft: '5px',
+    display: 'inline-block',
+  }}
+> </Box> )}
 
 
           </Link>
@@ -197,7 +340,7 @@ const Invoices = () => {
           }
         });
   
-        const dateCommande = commande.dateCommande.split('T')[0];
+        const dateCommande = new Date(commande.dateCommande);
         const dateLivraison = firstBonCommande? firstBonCommande.dateLivraison.split('T')[0]:'undefined';
   
         // Create the object with the required properties
@@ -207,20 +350,22 @@ const Invoices = () => {
           dateCommande,
           dateLivraison,
           point: userResponse.data.nomUtilisateur,
-          validationReception: commande.validationReception
+          validationReception: commande.validationReception,
+          stateBonLivraison: commande.stateBonLivraison
         };
   
         return orderWithDetails;
       }));
   
       console.log('Orders with details:', ordersWithDetails);
-      setData(ordersWithDetails)
+      const ordersWithDetailss = ordersWithDetails.sort((a, b) => b.dateCommande - a.dateCommande);
+      setData(ordersWithDetailss)
       // You can return the data or do something else with it
       return ordersWithDetails;
     } catch (err) {
       console.log('error : ',err);
       
-      // Handle errors here
+      
     }
   }
   
@@ -280,15 +425,34 @@ const Invoices = () => {
           },
         }}
       >
-        <DataGrid 
-        density="comfortable"
-        rows={data} 
-        getRowId={(row)=>row.idCommande}
-        columns={columns}
-        checkboxSelection
-        onSelectionModelChange={handleSelectionChange}
-        components={{ Toolbar: GridToolbar }}
-        />
+         <DataGrid
+      density="comfortable"
+      rows={data}
+      getRowId={(row) => row.idCommande}
+      columns={columns}
+      checkboxSelection
+      onSelectionModelChange={handleSelectionChange}
+      components={{ Toolbar: GridToolbar }}
+      slotProps={{
+        toolbar: {
+          showQuickFilter: true,
+        },
+      }}
+      sortingOrder={['asc', 'desc']}
+      sortModel={sortModel}
+      onSortModelChange={handleSortModelChange}
+    />
+
+<Button
+          variant="contained"
+          color="secondary"
+          
+          startIcon={<DeleteIcon />}
+          onClick={handleDeleteAll}
+        >
+         supprimer tout
+        </Button>
+
       </Box>
     </Box>
   );

@@ -61,6 +61,17 @@ const NotificationList = () => {
       })
       setNotifications(response.data)
     }
+
+else if(role == "POINT_DE_VENTE"){
+      const response = await axios.get('http://localhost:3000/api/v1/notifications/ptdevente', {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      setNotifications(response.data)
+    }
+
   }
   useEffect(()=>{
     getData();

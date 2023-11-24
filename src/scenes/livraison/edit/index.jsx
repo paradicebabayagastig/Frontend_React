@@ -58,7 +58,32 @@ const LivraisonEdit = () => {
           });
         };
         
-      
+           
+  //indication change if bon livraison updated
+  const handleUpdateBon = async (commandId) => {
+    console.log('reeeeddddd' ,commandId )
+    try {
+      await axios.patch(
+        `http://localhost:3000/api/v1/commandes/${commandId}/stateBon`,
+        {
+          stateBonLivraison: 'updated',
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log('Update successful.');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
       const handleSubmit = async () => {
         try {
           console.log(modifiedRows)
@@ -526,7 +551,12 @@ const LivraisonEdit = () => {
       >
         <Header title={message}  />
         <Button
-        onClick={handleSubmit} 
+      onClick={() => {
+        handleSubmit();
+        if (role === 'RESPONSABLE_LOGISTIQUE') {
+          handleUpdateBon(commandeId);
+        }
+      }}
         sx={{
           color:colors.primary[100],
           marginRight:5,

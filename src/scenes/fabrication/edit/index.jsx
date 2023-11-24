@@ -67,6 +67,35 @@ const FabricationEdit = () => {
             [arrayType]: updatedArray,
           });
         };
+
+      
+  //indication change if bon fab updated
+  const handleUpdateBon = async (idFabrication) => {
+    console.log('reeeeddddd' ,idFabrication )
+    try {
+      await axios.patch(
+        `http://localhost:3000/api/v1/fabrication/${idFabrication}/state`,
+        {
+          state: 'updated',
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log('Update successful.');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
+
+
         const handleSubmit = async () => {
           try {
             console.log(modifiedRows)
@@ -443,7 +472,12 @@ const FabricationEdit = () => {
       <Box display="flex" justifyContent='space-between'>
       <Header title={message} />
       <Button
-        onClick={handleSubmit} 
+        onClick={() => {
+          handleSubmit();
+          if (role === 'CHEF_GLACIER') {
+            handleUpdateBon(bonfabricationId);
+          }
+        }}
         sx={{
           color:colors.primary[100],
           marginRight:5,

@@ -1,5 +1,6 @@
 import { Box, Checkbox, FormControlLabel, IconButton, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
+import React from 'react'
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { mockDataInvoices } from "../../data/mockData";
@@ -21,6 +22,63 @@ const BonFabrications = () => {
   const colors = tokens(theme.palette.mode);
   const [data,setData] = useState([]); 
   const [selectedRows, setSelectedRows] = useState([]);
+
+// for the soorttt arrow 
+const [sortModel, setSortModel] = React.useState([{ field: 'dateCommande', sort: 'desc' }]);
+const handleSortModelChange = (newModel) => {
+  setSortModel(newModel);
+};
+
+ //state bon fab
+ const handleViewBonFab = async (idFabrication) => {
+  try {
+    await axios.patch(
+      `http://localhost:3000/api/v1/fabrication/${idFabrication}/state`,
+      {
+        state: 'seen',
+      },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    setData((prevData) =>
+      prevData.map((item) =>
+        item.idFabrication === idFabrication
+          ? { ...item, state: 'seen' }
+          : item
+      )
+    );
+
+    console.log('Fabrication state updated successfully.');
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+//deleete
+const handleDelete = async (id) => {
+  try {
+    await axios.delete(`http://localhost:3000/api/v1/fabrication/${id}`, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    setData((prevData) => prevData.filter((row) => row.idFabrication !== id));
+    console.log('Row deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting row:', error);
+  }
+};
+
+//
   const handleSelectionChange = (newSelection) => {
     setSelectedRows(newSelection);
     console.log('Selected Rows:', newSelection.map((id) => data.find((row) => row.idBonLivraison === id)));
@@ -67,7 +125,8 @@ const BonFabrications = () => {
       id:1,
       field: "reference",
       headerName: "reference",
-      flex: 1,
+      flex: 0.5,
+      sortable: false,
       cellClassName: "name-column--cell",
       
     },
@@ -75,20 +134,22 @@ const BonFabrications = () => {
       id:2,
       field: "date",
       headerName: "date",
-      flex: 1,
+      flex: 0.5,
+      renderCell: (params) => <Typography>{params.row.date.toLocaleDateString()}</Typography>,
       cellClassName: "name-column--cell",
       
     },
-   
     {
       id:3,
       field: "chef",
       headerName: "Chef Glacier",
-      flex: 1,
+      sortable: false,
+      flex: 0.5,
     },
     {
       id:4,
       field: "isValid",
+      sortable: false,
       headerName: "Validation",
       flex: 1,
       renderCell: (params) => (
@@ -131,12 +192,62 @@ const BonFabrications = () => {
                 color: colors.button[200], // Change text color on hover
               },
             }}
+            onClick={() => {
+              if (role === 'RESPONSABLE_LOGISTIQUE') {
+                handleViewBonFab(params.row.idFabrication);
+              }
+            }}
+
             >
           
                 <MoreVertIcon />
             
             </IconButton>
             
+            <IconButton
+          variant="outlined"
+          sx={{
+            marginLeft:2,
+            backgroundColor:colors.primary[400],
+            color:colors.primary[100],
+            "&:hover": {
+              backgroundColor: colors.button[100], 
+              color: colors.button[200], 
+            },
+          }}
+
+          onClick={(event) => {
+            event.preventDefault(); 
+            event.stopPropagation(); 
+            handleDelete(params.row.idFabrication);
+          }}
+          >
+                 
+              <DeleteIcon />
+
+          </IconButton>
+
+
+            {role === 'RESPONSABLE_LOGISTIQUE' && (
+            <Box
+    sx={{
+      width: '10px',
+      height: '10px',
+      borderRadius: '50%',
+      backgroundColor: (() => {
+        if (params.row.state === 'new') {
+          return 'green';
+        } else if (params.row.state === 'updated') {
+          return 'red'; 
+        } else {
+          return 'grey'; 
+        }
+      })(),
+      marginLeft: '5px',
+      display: 'inline-block',
+    }}
+  ></Box> )}
+
            
           </Link>
             </Box>
@@ -173,13 +284,16 @@ const BonFabrications = () => {
                 reference: order.reference,
                 chef: userResponse.data.nomUtilisateur,
                 isValid: order.validationFabrication,
-                date: order.dateFabrication.split('T')[0]
+                date: new Date(order.dateFabrication),
+                state:order.state
 
               };
 
               return orderWithUserName;
         }))
-        setData(updatedOrders);
+        const sortedOrders = updatedOrders.sort((a, b) => b.date - a.date);
+
+      setData(sortedOrders);
     }
     catch(err) {
       console.log(err)
@@ -236,14 +350,23 @@ const BonFabrications = () => {
           },
         }}
       >
-        <DataGrid 
-        density="comfortable"
-        rows={data} 
-        getRowId={(row)=>row.idFabrication}
-        columns={columns}
-        onSelectionModelChange={handleSelectionChange}
-        components={{ Toolbar: GridToolbar }}
-        />
+        <DataGrid
+      density="comfortable"
+      rows={data}
+      getRowId={(row) => row.idFabrication}
+      columns={columns}
+      checkboxSelection
+      onSelectionModelChange={handleSelectionChange}
+      components={{ Toolbar: GridToolbar }}
+      slotProps={{
+        toolbar: {
+          showQuickFilter: true,
+        },
+      }}
+      sortingOrder={['asc', 'desc']}
+      sortModel={sortModel}
+      onSortModelChange={handleSortModelChange}
+    />
       </Box>
     </Box>
   );

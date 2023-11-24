@@ -7,7 +7,7 @@ import axios from "axios"
 import Header from "../../components/Header";
 import OrderItemForm from "./bonCommandeCard";
 import { Link, useParams } from "react-router-dom";
-
+import NotificationsCenter from '../../components/notificationsCenter'
 
 const AddCommande = () => {
    
@@ -31,6 +31,33 @@ const AddCommande = () => {
 
          const handleOpen = () => setOpen(true);
          const handleClose = () => setOpen(false);
+
+// //notif
+const sendNotification = async () => {
+  try {
+    console.log('Sending notification...');
+    const response = await axios.patch(
+      `http://localhost:3000/api/v1/commandes/notif/${idCommande}`,
+      { text: 'bon livraison créé', userId: pdv[0]?.userId },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      }
+    );
+
+    console.log('Notification sent successfully!', response.data);
+    // getData(); 
+  } catch (error) {
+    console.error('Error sending notification:', error);
+
+    
+  }
+};
+
+
          const handleCreateLivraison = (async () => {
           try {
             const response = await axios.patch(`http://localhost:3000/api/v1/commandes/${idCommande}`,{
@@ -40,6 +67,8 @@ const AddCommande = () => {
                  'Authorization': `Bearer ${token}`
               }
             })
+             // Send notification 
+             await sendNotification();
             setData({...data,livraison:true})
           }
           catch (error) {

@@ -1,5 +1,6 @@
 import { Box, Checkbox, Fab, FormControlLabel, Icon, IconButton, InputLabel, MenuItem, NativeSelect, Select, TextField, Typography, useTheme } from "@mui/material";
 import { Button } from '@mui/material';
+import React from 'react'
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
@@ -29,20 +30,168 @@ const Invoices = () => {
   const role = authCtx.role
   const id = authCtx.id
 
+   // for the soorttt arrow 
+ const [sortModel, setSortModel] = React.useState([{ field: 'dateCommande', sort: 'desc' }]);
+ const handleSortModelChange = (newModel) => {
+   setSortModel(newModel);
+ };
 
+//selected rows for delete all
+const [selectedRows, setSelectedRows] = useState([]);
+const [isAnyRowSelected, setIsAnyRowSelected] = useState(false);
 
-  const [selectedRows,setSelectedRows] = useState([]);
-  const handleSelectionChange = async (newSelection)=>{
-    setSelectedRows(newSelection);
+const handleCreateLivraison = async (idCommande) => {
+  try {
+    // Assuming that you have a property named 'livraison' in your DataGrid rows
+    const updatedOrders = data.map((order) =>
+      order.idCommande === idCommande
+        ? { ...order, livraison: true }
+        : order
+    );
+
+    setData(updatedOrders);
+
+    // Make the axios patch request as before
+    const response = await axios.patch(
+      `http://localhost:3000/api/v1/commandes/${idCommande}`,
+      {},
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } catch (error) {
+    console.log(error);
   }
+};
+
+const handleCheckboxChange = (event, idCommande) => {
+  const { checked } = event.target;
+
+  setSelectedRows((prevSelectedRows) => {
+    if (idCommande === null) {
+     
+      return checked ? data.map((row) => row.idCommande) : [];
+    } else {
+    
+      return checked
+        ? [...prevSelectedRows, idCommande]
+        : prevSelectedRows.filter((id) => id !== idCommande);
+    }
+  });
+
+  setIsAnyRowSelected(checked || selectedRows.length > 0);
+};
+
+
+//delete commande
+const handleDelete = async (idCommande) => {
+  try {
+    
+    await axios.delete(`http://localhost:3000/api/v1/commandes/${idCommande}`, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setData((prevData) => prevData.filter((row) => row.idCommande !== idCommande));
+    console.log('Row deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting row:', error);
+    
+  }
+};
+
+//delete all 
+const handleDeleteAll = async () => {
+console.log('isAnyRowSelected:', isAnyRowSelected);
+console.log('selectedRows:', selectedRows);
+
+if (!isAnyRowSelected) {
+  console.log('No rows selected to delete.');
+  return;
+}
+
+try {
+  console.log('IDs:', selectedRows);
+
+  await axios({
+    method: 'delete',
+    url: 'http://localhost:3000/api/v1/commandes/delete-multiple',
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    data: { ids: selectedRows }, 
+  });
+
+  console.log('Rows deleted successfully.');
+  setSelectedRows([]);
+  setIsAnyRowSelected(false);
+} catch (error) {
+  console.error('Error deleting rows:', error);
+}
+};
+
+//state commande for l indication
+const handleViewCommand = async (commandId) => {
+  try {
+    
+    await axios.patch(`http://localhost:3000/api/v1/commandes/${commandId}/state`, {
+      state: 'seen',
+    }, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    // ne9sek setState hne bech ysir lupdate fil page
+
+    
+  } catch (error) {
+    console.error(error);
+   
+  }
+};
 
 
   const columns = [
+    
+    {
+      id:0,
+      field: 'checkboxSelection',
+      headerName: 'Select',
+      width: 100,
+      sortable: false,
+      renderHeader: (params) => (
+        <Checkbox
+          checked={isAnyRowSelected}
+          indeterminate={selectedRows.length > 0 && selectedRows.length < data.length}
+          onChange={(event) => handleCheckboxChange(event, null)}
+        />
+      ),
+      renderCell: (params) => (
+        <Checkbox
+        checked={selectedRows.includes(params.row.idCommande)}
+        onChange={(event) => handleCheckboxChange(event, params.row.idCommande)}
+      />
+      
+      ),
+      
+    },
+    
     {
       id:1,
       field: "reference",
       headerName: "Reference",
       flex: 0.25,
+      sortable: false,
       cellClassName: "name-column--cell",
       
     },
@@ -52,6 +201,7 @@ const Invoices = () => {
       field: "name",
       headerName: "Point De Vente",
       flex: 0.5,
+      sortable: false,
       cellClassName: "point-column--cell"
     },
     {
@@ -59,12 +209,22 @@ const Invoices = () => {
       field: "dateCommande",
       headerName: "Date",
       flex: 0.5,
+      renderCell: (params) => (
+        <Box 
+        sx={{
+          display:"flex",
+          justifyContent:"space-between",
+          alignItems:"center"
+          
+        }}
+        
+        >  <Typography>{params.row.dateCommande.toLocaleDateString()}</Typography> </Box>)
     },
     {
       id:4,
-      field:'test',
-      headerName: "Fabrication/Libraison",
-      flex: 0.5,
+      field:'fabrication',
+      headerName: "Fabrication",
+      flex: 0.25,
       cellClassName: "point-column--cell",
       renderCell: (params) => (
         <Box 
@@ -72,61 +232,61 @@ const Invoices = () => {
           flexDirection='row'
           gap={5}
           >
-          {/* <FormControlLabel
-              sx={{
-                color: colors.pinkAccent[400], // Apply the color based on the state
-              }}
-              control={
-                <Checkbox
-                  name="loading"
-                 // Apply the color based on the state
-                  checked={params.row.checkFabrication}
-                  // onChange={() => handleSwitchChange(params.id)}
-                   // Disable the switch once it's pressed
-                   color="default"
-                   sx={{
-                    color:colors.pinkAccent[200],
-                    '&.Mui-disabled': {
-                      color: colors.pinkAccent[400],
-                    },
-                   }}
-                    disabled
-                    
-
-                />
-              }
-              label="fabriqué"
-              /> */}
               {params.row.checkFabrication? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)}
               {params.row.livraison? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)}
-              
-
-              {/* <FormControlLabel
-              sx={{
-                
-                color: colors.pinkAccent[400], // Apply the color based on the state
+        </Box>
+      )
+    },
+    {
+      id:5,
+      field:'livraison',
+      headerName: "Livraison",
+      flex: 0.25,
+      cellClassName: "point-column--cell",
+      renderCell: (params) => (
+        <Box 
+          display='flex'
+          flexDirection='row'
+          gap={5}
+          >
+              {params.row.livraison? ( 
+                  <Link to={`/livraison/info/${params.row.idCommande}`}>
+                  <Button sx={{
+                    color: 'black',
+                      background: '#70D8BD',
+                      border:1,
+                      borderColor:colors.primary[400],
+                      "&:hover":{
+                        borderColor:'green',
+                        color:'green',
+                        background: colors.primary[500]                }
+                }}
+                >
+                  Afficher
+                 </Button>
+                 </Link>
+              ):(
+                <Button sx={{
+                  color: colors.primary[100],
+                    background: colors.primary[400],
+                    border:1,
+                    borderColor:colors.primary[400],
+                    "&:hover":{
+                      borderColor:colors.pinkAccent[400],
+                      color:colors.pinkAccent[400],
+                      background: colors.primary[500]                }
               }}
-              control={
-                <Checkbox
-                  name="loading"
-                 // Apply the color based on the state
-                  checked={params.row.livraison}
-                   // Disable the switch once it's pressed
-                   color="default"
-                   sx={{
-                    color:colors.pinkAccent[200] }}
-                    disabled
-
-                />
-              }
-              label="livré"
-              /> */}
+              onClick={() => handleCreateLivraison(params.row.idCommande)}
+              >
+                Créer
+               </Button>
+              )}
         </Box>
       )
     },
     
     {
-      id: 5,
+      id: 6 ,
       headerName: "Action",
       flex: 0.25,
       renderCell: (params) =>  <Box sx={{
@@ -144,6 +304,10 @@ const Invoices = () => {
         color: colors.button[200], // Change text color on hover
       },
     }}
+    onClick={() => {
+      if (role === 'RESPONSABLE_LOGISTIQUE') {
+        handleViewCommand(params.row.idCommande);
+      }}}
     >
   
         <RemoveRedEyeIcon />
@@ -166,12 +330,37 @@ const Invoices = () => {
       color: colors.button[200], // Change text color on hover
     },
   }}
+  onClick={(event) => {
+    event.preventDefault(); 
+    event.stopPropagation(); 
+    handleDelete(params.row.idCommande);
+  }}
   >
 
       <DeleteIcon />
 
   </IconButton>
 
+  {role === 'RESPONSABLE_LOGISTIQUE' && (
+  <Box
+    sx={{
+      width: '10px',
+      height: '10px',
+      borderRadius: '50%',
+      backgroundColor: (() => {
+        if (params.row.state === 'new') {
+          return 'green';
+        } else if (params.row.state === 'updated') {
+          return 'red'; 
+        } else {
+          return 'grey'; 
+        }
+      })(),
+      marginLeft: '5px',
+      display: 'inline-block',
+    }}
+  ></Box>
+)}
 
   </Link>
   </Box>,
@@ -221,17 +410,18 @@ const Invoices = () => {
           const orderWithUserName = {
             idCommande: order.idCommande,
             reference : order.refBC,
-            dateCommande: dateOnly,
+            dateCommande: new Date(order.dateCommande),
             fabricationId: order.fabricationId,
             checkFabrication: check,
             livraison:order.livraison,
-            name: userResponse.data.nomUtilisateur  // Assuming the user's username is stored in `username` property
+            name: userResponse.data.nomUtilisateur ,
+            state:order.state
           };
   
           return orderWithUserName;
         }));
   
-        setData(updatedOrders);
+        setData(updatedOrders.sort((a, b) => b.dateCommande - a.dateCommande));
         console.log("global data in ! ")
       } catch (err) {
         console.log(err);
@@ -335,6 +525,35 @@ const Invoices = () => {
         )
           
         }
+
+
+ {/* Delete All */}
+ {(role === 'RESPONSABLE_LOGISTIQUE') && (
+         <Button
+         sx={{
+           color: colors.pinkAccent[400],
+           background: colors.primary[400],
+           marginRight: 5,
+           border: 1,
+           borderColor: colors.primary[400],
+           "&:hover": {
+             borderColor: colors.pinkAccent[400],
+             color: colors.pinkAccent[400],
+             background: colors.primary[500],
+           },
+         }}
+         onClick={() => {
+           
+           handleDeleteAll();
+         }}
+       >
+         <DeleteIcon />
+         Supprimer Tout
+       </Button>
+       
+        )}
+
+
       </Box>
         
      
@@ -374,25 +593,23 @@ const Invoices = () => {
           },
         }}
       >
-        <DataGrid 
-        checkboxSelection
-        density="comfortable"
-        getRowId={(row)=>row.idCommande}
-        rows={data} 
-        columns={columns} 
-        onSelectionModelChange={handleSelectionChange}
-        components={{ Toolbar: GridToolbar }}
-        slotProps={{
-          toolbar: {
-            showQuickFilter: true,
-          },
-        }}
-        initialState={{
-          sorting: {
-            sortModel: [{ field: 'dateCommande', sort: 'desc' }],
-          },
-        }}
-        />
+        <DataGrid
+  density="comfortable"
+  rows={data}
+  getRowId={(row) => row.idCommande}
+  columns={columns}
+  // selectionModel={selectedRows}
+  // onSelectionModelChange={(newSelection) => setSelectedRows(newSelection)}
+  components={{ Toolbar: GridToolbar }}
+  slotProps={{
+    toolbar: {
+      showQuickFilter: true,
+    },
+  }}
+  sortingOrder={['asc', 'desc']}
+  sortModel={sortModel}
+  onSortModelChange={handleSortModelChange}
+/>
       
       </Box>
     </Box>

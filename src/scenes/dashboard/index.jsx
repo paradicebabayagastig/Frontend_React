@@ -37,6 +37,7 @@ import LivraisonEdit from "../livraison/edit";
 import NotificationCenter from "../../components/notificationsCenter";
 import Pertes from "../pertes"
 import Stock from "../stock";
+import StockView from "../stock/readonly";
 
 
 
@@ -108,6 +109,8 @@ import Stock from "../stock";
                 <Route path="/livraison/edit/:id" element={<LivraisonEdit />} />
                 <Route path="/pertes" element={<Pertes />} />
                 <Route path="/stock" element={<Stock />} />
+                <Route path="/stock/info/:id" element={<StockView />} />
+
               </Routes>
             </main>
           </div>

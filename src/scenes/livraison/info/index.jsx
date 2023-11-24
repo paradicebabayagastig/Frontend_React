@@ -26,6 +26,9 @@ const LivraisonInfo = () => {
         const [loading, setLoading] = useState(true);
         const editLinkString = `/livraison/edit/${commandeId}`
     
+ 
+
+
 
         const message = ("Information commande")
         async function fetchData() {

@@ -40,6 +40,19 @@ const NotificationsCenter = ()=> {
       })
       setNotifications(response.data)
     }
+
+    else if(role == "POINT_DE_VENTE"){
+      const response = await axios.get('http://localhost:3000/api/v1/notifications/ptdevente', {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      setNotifications(response.data)
+    }
+
+
+
   }
   useEffect(()=>{
     getData();
@@ -52,13 +65,19 @@ const NotificationsCenter = ()=> {
     })
   }
   
+
+
+
+
+
+  
   return (
     <>
     <List sx={{ width: '100%', height:'100%',marginBottom:"0%", bgcolor: 'background.paper' }}>
     <Box
       sx={{
         width:"100%",
-        hight:"30%"
+       // height:"30%"
       }}
     >
       <Typography
@@ -69,26 +88,29 @@ const NotificationsCenter = ()=> {
        }}
        >Les Notifications</Typography>
     </Box>
-    {notifications.map((notification, index) => (
-      <>
-        <Box 
-          key={index}
-          sx={{
-            alignContent:"inline",
-            p:3
-          }}
-        >
-          {notification.text}
-          <ClearAllIcon 
-          sx={{
-            float:"right"
-          }}
-          onclick={handleSwipe(notification.idLog)}
-          />
-        </Box>
-        <Divider variant="inset" component="li" />
-      </>
-    ))}
+    
+    {notifications.slice().reverse().map((notification, index) => (
+  <>
+    <Box 
+      key={index}
+      sx={{
+        alignContent: "inline",
+        p: 3,
+      }}
+    >
+      {notification.text}
+      <ClearAllIcon 
+        sx={{
+          float: "right",
+        }}
+        onClick={() => handleSwipe(notification.idLog)}
+      />
+    </Box>
+    <Divider variant="inset" component="li" />
+  </>
+))}
+
+
     </List>
     </>
   );

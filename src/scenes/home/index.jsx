@@ -222,17 +222,20 @@ const Home = () =>
                       }}
                     />
                     <Typography variant="body1"> Vous avez deja rempli stock pour aujourd'hui!</Typography>
-                    <Button
-                      variant="contained"
-                      sx={{
-                        backgroundColor: '#000000',
-                        width: 300,
-                        marginTop: 5,
-                      }}
-                      onClick={handleCreateStock}
-                    >
-                      Voir Stock
-                    </Button>
+                    <Link to={`/stock/info/${stockExists}`}>
+                      <Button
+                        variant="contained"
+                        sx={{
+                          backgroundColor: '#000000',
+                          width: 300,
+                          marginTop: 5,
+                        }}
+                        onClick={handleCreateStock}
+                      >
+                        Voir Stock
+                      </Button>
+                    </Link>
+                    
                   </Paper>
                 )}
               </div>
@@ -286,7 +289,7 @@ const Home = () =>
                       }}
                     />
                     <Typography variant="body1"> Votre commande d'aujourd'hui est enregistrée.</Typography>
-                    <Link to={``}>
+                    <Link to={`/commande/${commandeExists}`}>
                     <Button
                       variant="contained"
                       sx={{

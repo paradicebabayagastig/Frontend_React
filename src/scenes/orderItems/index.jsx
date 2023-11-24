@@ -17,6 +17,7 @@ const AddBon = () => {
       const bonCommandeId = parseInt(params.id);
       console.log('bonCommandeId',bonCommandeId);
         const authCtx = useContext(AuthContext)
+        const role = authCtx.role
         const token = authCtx.isAuthenticated;
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
@@ -35,6 +36,33 @@ const AddBon = () => {
         const [kilo,setKilo] = useState([])
         const [fourniture,setFourniture] = useState([])
 
+
+        
+  //indication change if commande updated
+  const handleUpdateCommande = async (commandId) => {
+    console.log('reeeeddddd' ,commandId )
+    try {
+      await axios.patch(
+        `http://localhost:3000/api/v1/commandes/${commandId}/state`,
+        {
+          state: 'updated',
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log('Update successful.');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  
         const style = {
           position: 'absolute',
           top: '50%',
@@ -758,7 +786,14 @@ const AddBon = () => {
         />
         
       </Box>
-      <Button type="submit" variant="contained" size="large" onClick={handleSubmit} sx={{
+      <Button type="submit" variant="contained" size="large"  
+            onClick={() => {
+              handleSubmit();
+              if (role === 'POINT_DE_VENTE') {
+                handleUpdateCommande(bonCommandeId);
+              }
+            }}
+ sx={{
         mt:2.5,
         background:colors.pinkAccent[300],
         '&:hover': {
