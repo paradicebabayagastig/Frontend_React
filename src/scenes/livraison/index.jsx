@@ -75,7 +75,7 @@ const handleDelete = async (idCommande) => {
   }
 };
 
-//delete all 
+// delete all 
 const handleDeleteAll = async () => {
   console.log('isAnyRowSelected:', isAnyRowSelected);
   console.log('selectedRows:', selectedRows);
@@ -85,21 +85,22 @@ const handleDeleteAll = async () => {
     return;
   }
 
-  const selectedIds = selectedRows.map((row) => row.idCommande);
-
   try {
-    await axios.patch('http://localhost:3000/api/v1/commandes/deleteAll', {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      data: {
-        ids: selectedIds,
-      },
-    });
+    
+    console.log('IDs:', selectedRows);
+    await axios.patch(
+      'http://localhost:3000/api/v1/commandes/deleteAll',
+      { ids: selectedRows }, 
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
 
-    setData((prevData) => prevData.filter((row) => !selectedIds.includes(row.idCommande)));
+    setData((prevData) => prevData.filter((row) => !selectedRows.includes(row.idCommande)));
 
     console.log('Rows deleted successfully.');
 
@@ -111,11 +112,12 @@ const handleDeleteAll = async () => {
   }
 };
 
+
   //indication change if viewed
   const handleViewBon = async (commandId) => {
     try {
       await axios.patch(
-        `http://localhost:3000/api/v1/commandes/${commandId}/stateBon`,
+        `http://localhost:3000/api/v1/commandes/stateBon/${commandId}`,
         {
           stateBonLivraison: 'seen',
         },
@@ -382,10 +384,37 @@ const handleDeleteAll = async () => {
   return (
     <Box m="20px">
       <Box 
-      display="flex"
+      display="flex"  justifyContent='space-between'
       >
             <Header title="Bons de Livraison"  />
             
+ {/* Delete All */}
+ {(role === 'RESPONSABLE_LOGISTIQUE') && (
+         <Button
+         sx={{
+           color: colors.pinkAccent[400],
+           background: colors.primary[400],
+           marginRight: 5,
+           border: 1,
+           borderColor: colors.primary[400],
+           "&:hover": {
+             borderColor: colors.pinkAccent[400],
+             color: colors.pinkAccent[400],
+             background: colors.primary[500],
+           },
+         }}
+         onClick={() => {
+           
+           handleDeleteAll();
+         }}
+       >
+         <DeleteIcon />
+         Supprimer Tout
+       </Button>
+       
+        )}
+
+
       </Box>
       
       <Box
@@ -443,15 +472,6 @@ const handleDeleteAll = async () => {
       onSortModelChange={handleSortModelChange}
     />
 
-<Button
-          variant="contained"
-          color="secondary"
-          
-          startIcon={<DeleteIcon />}
-          onClick={handleDeleteAll}
-        >
-         supprimer tout
-        </Button>
 
       </Box>
     </Box>

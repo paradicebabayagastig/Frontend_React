@@ -21,7 +21,22 @@ const BonFabrications = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [data,setData] = useState([]); 
-  const [selectedRows, setSelectedRows] = useState([]);
+
+
+   //selected rows for delete all
+ const [selectedRows, setSelectedRows] = useState([]);
+ const [isAnyRowSelected, setIsAnyRowSelected] = useState(false);
+ 
+ 
+ const handleSelectionChange = (newSelection) => {
+   console.log('New selection aaa:', newSelection);
+   setSelectedRows(newSelection);
+ 
+   setIsAnyRowSelected(newSelection.length > 0);
+ 
+   console.log('Current 11:', newSelection);
+   console.log('Current 22:', newSelection.length > 0);
+ };
 
 // for the soorttt arrow 
 const [sortModel, setSortModel] = React.useState([{ field: 'dateCommande', sort: 'desc' }]);
@@ -77,12 +92,46 @@ const handleDelete = async (id) => {
     console.error('Error deleting row:', error);
   }
 };
+ //delete all 
+ const handleDeleteAll = async () => {
+
+  console.log('selectedRows:', selectedRows);
+  
+  if (!isAnyRowSelected) {
+    console.log('No rows selected to delete.');
+    return;
+  }
+  
+  try {
+    console.log('IDs:', selectedRows);
+  
+    await axios({
+      method: 'delete',
+      url: 'http://localhost:3000/api/v1/fabrication/deleteAll',
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      data: { ids: selectedRows }, 
+    });
+    
+    setData((prevData) => prevData.filter((row) => !selectedRows.includes(row.idFabrication)));
+  
+    console.log('Rows deleted successfully.');
+    setSelectedRows([]);
+    setIsAnyRowSelected(false);
+  } catch (error) {
+    console.error('Error deleting rows:',data, error);
+  }
+  };
+  
+
+
+
 
 //
-  const handleSelectionChange = (newSelection) => {
-    setSelectedRows(newSelection);
-    console.log('Selected Rows:', newSelection.map((id) => data.find((row) => row.idBonLivraison === id)));
-  };
+ 
   const handleSwitchChange = async (fabricationId) => {
     try {
         updateFabrication(fabricationId)
@@ -313,9 +362,38 @@ const handleDelete = async (id) => {
   return (
     <Box m="20px">
       <Box 
-      display="flex"
+      display="flex"  justifyContent='space-between'
       >
             <Header title="Bons de Fabrication"  />
+
+
+ {/* Delete All */}
+ {(role === 'RESPONSABLE_LOGISTIQUE') && (
+         <Button
+         sx={{
+           color: colors.pinkAccent[400],
+           background: colors.primary[400],
+           marginRight: 5,
+           border: 1,
+           borderColor: colors.primary[400],
+           "&:hover": {
+             borderColor: colors.pinkAccent[400],
+             color: colors.pinkAccent[400],
+             background: colors.primary[500],
+           },
+         }}
+         onClick={() => {
+           
+           handleDeleteAll();
+         }}
+       >
+         <DeleteIcon />
+         Supprimer Tout
+       </Button>
+       
+        )}
+
+
       </Box>
       
       <Box
@@ -370,6 +448,10 @@ const handleDelete = async (id) => {
       </Box>
     </Box>
   );
+
+
+
+  
 };
 
 export default BonFabrications;

@@ -82,9 +82,11 @@ import StockView from "../stock/readonly";
                 <Route path="/" element={<Home />} />
                 <Route path="/contacts" element={<Contacts />} />
                 <Route path="/commande" element={<Invoices />} />
-                <Route path="/ajouterCommande/:id" element={<AddCommande />} />
+                {/* <Route path="/ajouterCommande/:id" element={<AddCommande />} /> */}
                 <Route path="/bonCommande/:id" element={<AddBon />} />
                 <Route path="/bonCommande/info/:id" element={<Bcinfo />} />
+                <Route path="/pointsVentes" element={<Points />} />
+                <Route path="/livraison/info/:id" element={<LivraisonInfo />}  />
               </Routes>
             </main>
           </div>

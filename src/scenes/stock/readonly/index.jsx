@@ -21,72 +21,162 @@ const StockView = () => {
     const [kilo, setKilo] = useState([]);
     const [fourniture, setFourniture] = useState([]);
  
+
+
+//     async function fetchData() {
+//           let suiteIndex = 0;
+//           let kiloIndex = 0;
+//           let fournitureIndex = 0;
+      
+//           try {
+//               const response = await axios.get(`http://localhost:3000/api/v1/stockItem/stock/${stockId}`, {
+//                   withCredentials: true,
+//                   headers: {
+//                       'Content-Type': 'application/json',
+//                       'Authorization': `Bearer ${token}`
+//                   }
+//               });
+      
+//               console.log("Stock response:", response);
+
+//     let indexCounter = 0;
+
+//     const promises = response.data.map(async (item) => {
+//       const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${item.produitId}`, {
+//         withCredentials: true,
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${token}`
+//         }
+//       });
+
+//       const nomProduit = produitResponse.data.nomProduit;
+//       const classProduit = produitResponse.data.class;
+
+//       let newItem = {
+//         index: indexCounter++,
+//         idProduit: item.produitId,
+//         produit: nomProduit,
+//         quantity: item.quantity,
+//         loss: item.loss,
+//         type: item.type
+//       };
+
+//       console.log("New Item:", newItem);
+//       return newItem;
+//     });
+
+//     const results = await Promise.all(promises);
+//     console.log("Results:", results);
+
+//     const suiteArray = results.filter(item => item.type === "SUITE");
+//     const kiloArray = results.filter(item => item.type === "KG");
+//     const fournitureArray = results.filter(item => item.type === "FOURNITURE");
+
+//     console.log("Suite Array:", suiteArray);
+//     console.log("Kilo Array:", kiloArray);
+//     console.log("Fourniture Array:", fournitureArray);
+
+//     setSuite(suiteArray);
+//     setKilo(kiloArray);
+//     setFourniture(fournitureArray);
+
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
+
+
+
     async function fetchData() {
-        try {
-            const response = await axios.get(`http://localhost:3000/api/v1/stockItem/stock/${stockId}`, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            const suiteArray = [];
-            const kiloArray = [];
-            const fournitureArray = [];
-            console.log(response)
-            let suiteIndex = 0;
-            let kiloIndex = 0;
-            let fournitureIndex = 0;
-            
-
-            response.data.forEach(async (item) => {
-                const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${item.produitId}`,{
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-            })
-                const nomProduit = produitResponse.data.nomProduit;
-                const classProduit = produitResponse.data.class;
-
-                if (item.type === "SUITE") {
-                    suiteArray.push({
-                        index: suiteIndex++,
-                        idProduit: item.produitId,
-                        produit: nomProduit,
-                        quantity: item.quantity,
-                        loss: item.loss,
-                    });
-                } else if (item.type === "SPECIAL") {
-                    kiloArray.push({
-                        index: kiloIndex++,
-                        idProduit: item.produitId,
-                        produit: nomProduit + ' ' + classProduit,
-                        quantity: item.quantity,
-                        loss: item.loss,
-                    });
-                } else if (item.type === "FOURNITURE") {
-                    fournitureArray.push({
-                        index: fournitureIndex++,
-                        idProduit: item.produitId,
-                        produit: nomProduit,
-                        quantity: item.quantity,
-                        loss: item.loss,
-                    });
-                }
-            });
-            setSuite(suiteArray);
-            setKilo(kiloArray);
-            setFourniture(fournitureArray);
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
+      let suiteIndex = 0;
+      let kiloIndex = 0;
+      let fournitureIndex = 0;
+  
+      try {
+          const response = await axios.get(`http://localhost:3000/api/v1/stockItem/stock/${stockId}`, {
+              withCredentials: true,
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              }
+          });
+  
+          console.log("Stock response:", response);
+  
+          const promises = response.data.map(async (item) => {
+              const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${item.produitId}`, {
+                  withCredentials: true,
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                  }
+              });
+  
+              console.log("produit response :", produitResponse);
+  
+              const nomProduit = produitResponse.data.nomProduit;
+              const classProduit = produitResponse.data.class;
+  
+              let newItem;
+  
+              if (item.type === "SUITE") {
+                  newItem = {
+                      index: suiteIndex++,
+                      idProduit: item.produitId,
+                      produit: nomProduit,
+                      quantity: item.quantity,
+                      loss: item.loss,
+                      type: item.type
+                  };
+              } else if (item.type === "KG") {
+                  newItem = {
+                      index: kiloIndex++,
+                      idProduit: item.produitId,
+                      produit: nomProduit + ' ' + classProduit,
+                      quantity: item.quantity,
+                      loss: item.loss,
+                      type: item.type
+                  };
+              } else if (item.type === "FOURNITURE") {
+                  newItem = {
+                      index: fournitureIndex++,
+                      idProduit: item.produitId,
+                      produit: nomProduit,
+                      quantity: item.quantity,
+                      loss: item.loss,
+                      type: item.type
+                  };
+              }
+  
+              console.log("New Item:", newItem);
+              return newItem;
+          });
+  
+          const results = await Promise.all(promises);
+          console.log("Results:", results);
+  
+          const suiteArray = results.filter(item => item.type === "SUITE");
+          const kiloArray = results.filter(item => item.type === "KG");
+          const fournitureArray = results.filter(item => item.type === "FOURNITURE");
+  
+          console.log("Suite Array:", suiteArray);
+          console.log("Kilo Array :", kiloArray);
+          console.log("Fourniture Array :", fournitureArray);
+  
+          setSuite(suiteArray);
+          setKilo(kiloArray);
+          setFourniture(fournitureArray);
+  
+      } catch (err) {
+          console.log(err);
+      }
+  }
+  
 
   
+
+ 
   useEffect(()=>{
     fetchData()
   },[]);
@@ -181,24 +271,26 @@ const StockView = () => {
         }}
       >
         <DataGrid
-        density="comfortable"
-        rows={suite}
-        columns={suiteColumns}
-        getRowId={(row)=>row.index}
-       />
-          <DataGrid
-        density="comfortable"
-        rows={kilo}
-        columns={kiloColumns}
-        getRowId={(row)=>row.index}
-       />
-          <DataGrid
-        density="comfortable"
-        rows={fourniture}
-        columns={fournitureColumns}
-        getRowId={(row)=>row.index}
-       />
-      
+  density="comfortable"
+  rows={suite}
+  columns={suiteColumns}
+  getRowId={(row) => `suite-${row.idProduit}`}
+/>
+
+<DataGrid
+  density="comfortable"
+  rows={kilo}
+  columns={kiloColumns}
+  getRowId={(row) => `kilo-${row.idProduit}`}
+/>
+
+<DataGrid
+  density="comfortable"
+  rows={fourniture}
+  columns={fournitureColumns}
+  getRowId={(row) => `fourniture-${row.idProduit}`}
+/>
+
       </Box>
     </Box>
   );

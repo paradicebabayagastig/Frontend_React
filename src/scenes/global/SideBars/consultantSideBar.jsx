@@ -18,6 +18,8 @@ import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 //import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 //import LoginIcon from '@mui/icons-material/Login';
 import LocalPostOfficeIcon from '@mui/icons-material/LocalPostOffice';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -138,6 +140,13 @@ const ConsultantSideBar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            <Item
+              title="Bons De livraison"
+              to="/livraison"
+              icon={<LocalShippingIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            /> 
              <Item
               title="Contacts information"
               to="/contacts"
@@ -145,6 +154,14 @@ const ConsultantSideBar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+             <Item
+              title="points de ventes"
+              to="/pointsVentes"
+              icon={<StorefrontIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            
 
            
           </Box>

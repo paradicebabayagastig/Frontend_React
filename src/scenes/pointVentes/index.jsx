@@ -20,9 +20,46 @@ const Points = () =>
     const colors = tokens(theme.palette.mode);
     const [points,setPoints] = useState([])
     const [refresh, setRefresh] = useState(false);
-
+    const [realConsumption, setRealConsumption] = useState({});
     const [expandedChildId, setExpandedChildId] = useState(null);
 
+
+    
+const currentDate = new Date();
+const yesterday = new Date(currentDate);
+yesterday.setDate(currentDate.getDate() - 1);
+const startDate = yesterday.toISOString().split('T')[0];
+const endDate = startDate; 
+
+//real consump
+const fetchRealConsumption = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/real-consumption', {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          startDate, 
+          endDate,
+        //   pointVenteId,
+        },
+      });
+
+      setRealConsumption(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    fetchRealConsumption(); 
+  }, [refresh]);
+
+
+///////////
     const handleExpand = (childId) => {
     if (expandedChildId === childId) {
     // If the same child is clicked again, collapse it
@@ -95,7 +132,13 @@ const Points = () =>
                             onChefChange={handleChefChange}
                             expandedChildId={expandedChildId}
                             onExpand={handleExpand}
-                            />
+                            >
+                            {/* Display real consumption data for each point de vente */}
+                            <Typography>
+                              Real Consumption: {realConsumption[pointVente.idPointVente]}
+                            </Typography>
+                            
+          </MyAccordion>
                         ))
                     }
                 

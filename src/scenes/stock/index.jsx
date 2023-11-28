@@ -138,7 +138,7 @@ const Stock = () => {
                     produitId: parseFloat(kilo[index].idProduit),
                     quantity: kilo[index].quantity,
                     loss: suite[index].loss,
-                    type:'SUITE'
+                    type:'KG'
                 }, {
                     withCredentials: true,
                     headers: {
@@ -162,7 +162,7 @@ const Stock = () => {
                     produitId: parseFloat(fourniture[index].idProduit),
                     quantity: fourniture[index].quantity,
                     loss: suite[index].loss,
-                    type:'SUITE'
+                    type:'FOURNITURE'
                 }, {
                     withCredentials: true,
                     headers: {

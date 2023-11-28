@@ -1,14 +1,17 @@
 import { Box, useTheme } from "@mui/material";
 import { ResponsiveBar } from "@nivo/bar";
 import { tokens } from "../theme";
+import { AuthContext } from "../contexts/Auth";
 import { mockBarData as data } from "../data/mockData";
-import { useEffect, useState } from "react";
+import { useEffect, useState ,useContext} from "react";
 import axios from "axios";
 
 const BarChart = ({date}) => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [dataStat,setDataStat] = useState([])
+    const authCtx = useContext(AuthContext)
+    const token = authCtx.isAuthenticated;
   
     const getMonthStartAndMiddleDates = (date) => {
       // Split the date string into year and month parts
@@ -33,27 +36,32 @@ const BarChart = ({date}) => {
       return { startDate, middleDate, endDate };
   };
     async function fetchData(){
-        try {
-          const { startDate, middleDate , endDate } = getMonthStartAndMiddleDates(date);
-          const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes',{
-            withCredentials:true,
-            headers: {
-              'Content-Type': 'application/json', 
-            }
-          })
-          const stats = await Promise.all(pointVentes.data.map(async (point) => {
-            const orderItem = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${middleDate}&pointVenteId=${point.idPointVente}`,{
-              withCredentials:true,
-              headers: {
-                'Content-Type': 'application/json', 
-              }
-            })
-            const stat = {
-              index:point.nomPointVente,
-              "consommation-réel": orderItem.data,
-            }
-            return stat
-          }))
+      try {
+        const { startDate, middleDate, endDate } = getMonthStartAndMiddleDates(date);
+        const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes', {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+    
+        const stats = await Promise.all(pointVentes.data.map(async (point) => {
+          const firstHalfEndDate = `${startDate}-${middleDate}`;
+          const secondHalfStartDate = `${middleDate}-${endDate}`;
+    
+          const orderItemFirstHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${firstHalfEndDate}&pointVenteId=${point.idPointVente}`);
+          const orderItemSecondHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${secondHalfStartDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`);
+    
+          const stat = {
+            index: point.nomPointVente,
+            "consommation-réel-first-half": orderItemFirstHalf.data,
+            "consommation-réel-second-half": orderItemSecondHalf.data,
+          };
+    
+          return stat;
+        }));
+          
           console.log('points : ',pointVentes.data)
           console.log('stats', stats)
           setDataStat(stats)
@@ -132,7 +140,8 @@ const BarChart = ({date}) => {
           },
         },
       }}
-      keys={["consommation-réel"]}
+      keys={["consommation-réel-first-half", "consommation-réel-second-half"]}
+
       indexBy="index"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}

@@ -414,7 +414,7 @@ const FabricationInfo = () => {
         ) : (
           <DataGrid 
                 rows={[]}
-                columns={fournitureColumns}
+                columns={columns}
                 sx={{
                   flex: 1.75
                 }}

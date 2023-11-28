@@ -29,6 +29,21 @@ const Invoices = () => {
   const token = authCtx.isAuthenticated
   const role = authCtx.role
   const id = authCtx.id
+  const [pdv,setPdv] = useState({});
+  const getPdv = async () => {
+    try{
+      const response = await axios.get(`http://localhost:3000/api/v1/pointsVentes/${authCtx.id}`,{
+        withCredentials: true,
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+        }
+      })
+      setPdv(response.data)
+    }catch(err){
+
+    }
+  }
 
    // for the soorttt arrow 
  const [sortModel, setSortModel] = React.useState([{ field: 'dateCommande', sort: 'desc' }]);
@@ -36,23 +51,58 @@ const Invoices = () => {
    setSortModel(newModel);
  };
 
+
 //selected rows for delete all
 const [selectedRows, setSelectedRows] = useState([]);
 const [isAnyRowSelected, setIsAnyRowSelected] = useState(false);
+
+
+const handleSelectionChange = (newSelection) => {
+  console.log('New selection aaa:', newSelection);
+  setSelectedRows(newSelection);
+
+  setIsAnyRowSelected(newSelection.length > 0);
+
+  console.log('Current 11:', newSelection);
+  console.log('Current 22:', newSelection.length > 0);
+};
+//notif
+const sendNotification = async (idCommande) => {
+  try {
+    console.log('Sending notification...');
+    const response = await axios.patch(
+      `http://localhost:3000/api/v1/commandes/notif/${idCommande}`,
+      { text: 'bon livraison créé', userId: pdv[0]?.userId },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      }
+    );
+
+    console.log('Notification sent successfully!', response.data);
+    // getData(); 
+  } catch (error) {
+    console.error('Error sending notification:', error);
+
+    
+  }
+};
 
 const handleCreateLivraison = async (idCommande) => {
   try {
     // Assuming that you have a property named 'livraison' in your DataGrid rows
     const updatedOrders = data.map((order) =>
-      order.idCommande === idCommande
-        ? { ...order, livraison: true }
-        : order
+      order.idCommande === idCommande ? { ...order, livraison: true } : order
     );
 
+    
     setData(updatedOrders);
 
     // Make the axios patch request as before
-    const response = await axios.patch(
+    await axios.patch(
       `http://localhost:3000/api/v1/commandes/${idCommande}`,
       {},
       {
@@ -63,28 +113,23 @@ const handleCreateLivraison = async (idCommande) => {
         },
       }
     );
+
+    // Send notification
+    await sendNotification(idCommande);
+
+    
+    setData((prevData) =>
+      prevData.map((order) =>
+        order.idCommande === idCommande ? { ...order, livraison: true } : order
+      )
+    );
   } catch (error) {
     console.log(error);
   }
 };
 
-const handleCheckboxChange = (event, idCommande) => {
-  const { checked } = event.target;
 
-  setSelectedRows((prevSelectedRows) => {
-    if (idCommande === null) {
-     
-      return checked ? data.map((row) => row.idCommande) : [];
-    } else {
-    
-      return checked
-        ? [...prevSelectedRows, idCommande]
-        : prevSelectedRows.filter((id) => id !== idCommande);
-    }
-  });
 
-  setIsAnyRowSelected(checked || selectedRows.length > 0);
-};
 
 
 //delete commande
@@ -108,7 +153,7 @@ const handleDelete = async (idCommande) => {
 
 //delete all 
 const handleDeleteAll = async () => {
-console.log('isAnyRowSelected:', isAnyRowSelected);
+
 console.log('selectedRows:', selectedRows);
 
 if (!isAnyRowSelected) {
@@ -129,12 +174,14 @@ try {
     },
     data: { ids: selectedRows }, 
   });
+  
+  setData((prevData) => prevData.filter((row) => !selectedRows.includes(row.idCommande)));
 
   console.log('Rows deleted successfully.');
   setSelectedRows([]);
   setIsAnyRowSelected(false);
 } catch (error) {
-  console.error('Error deleting rows:', error);
+  console.error('Error deleting rows:',data, error);
 }
 };
 
@@ -142,7 +189,7 @@ try {
 const handleViewCommand = async (commandId) => {
   try {
     
-    await axios.patch(`http://localhost:3000/api/v1/commandes/${commandId}/state`, {
+    await axios.patch(`http://localhost:3000/api/v1/commandes/state/${commandId}`, {
       state: 'seen',
     }, {
       withCredentials: true,
@@ -163,28 +210,7 @@ const handleViewCommand = async (commandId) => {
 
   const columns = [
     
-    {
-      id:0,
-      field: 'checkboxSelection',
-      headerName: 'Select',
-      width: 100,
-      sortable: false,
-      renderHeader: (params) => (
-        <Checkbox
-          checked={isAnyRowSelected}
-          indeterminate={selectedRows.length > 0 && selectedRows.length < data.length}
-          onChange={(event) => handleCheckboxChange(event, null)}
-        />
-      ),
-      renderCell: (params) => (
-        <Checkbox
-        checked={selectedRows.includes(params.row.idCommande)}
-        onChange={(event) => handleCheckboxChange(event, params.row.idCommande)}
-      />
-      
-      ),
-      
-    },
+   
     
     {
       id:1,
@@ -598,8 +624,8 @@ const handleViewCommand = async (commandId) => {
   rows={data}
   getRowId={(row) => row.idCommande}
   columns={columns}
-  // selectionModel={selectedRows}
-  // onSelectionModelChange={(newSelection) => setSelectedRows(newSelection)}
+  checkboxSelection
+  onSelectionModelChange={handleSelectionChange}
   components={{ Toolbar: GridToolbar }}
   slotProps={{
     toolbar: {

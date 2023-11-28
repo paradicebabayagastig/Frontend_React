@@ -1,4 +1,5 @@
 import { AuthContext } from "../../contexts/Auth";
+import { DataGrid } from '@mui/x-data-grid'
 import { useEffect,useContext, useState } from "react";
 import Header from "../../components/Header";
 import IceCreamCard from "../../components/flavorCard";
@@ -11,11 +12,15 @@ import  BarChart  from '../../components/barChart2'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Select, MenuItem } from '@mui/material';
+import { Dropdown } from "reactstrap";
+
 
 const Home = () => 
 
 {   
     const authCtx = useContext(AuthContext)
+    const token = authCtx.isAuthenticated;
     const name = authCtx.name
     var role = authCtx.role
     const navigate = useNavigate()
@@ -28,7 +33,65 @@ const Home = () =>
     const month = today.getMonth() + 1; // Adding 1 to get the correct month
 
 
+    const [selectedDateRange, setSelectedDateRange] = useState(null);
+    const [pdv,setPdv] = useState([]);
+const [gridData, setGridData] = useState([]);
+  const [startDate, setStartDate] = useState();
+  const [endDate, setEndDate] = useState();
+  const [selectedPointDeVente, setSelectedPointDeVente] = useState('');
+  const [filtersApplied, setFiltersApplied] = useState(false);
+  
+  
+ 
+  
+  //*** */
+  const getPdv = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/pointsVentes', {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      
+      setPdv(response.data.map(pointDeVente => ({ id: pointDeVente.idPointVente, nomPointVente: pointDeVente.nomPointVente })));
+    } catch (err) {
+      console.error('Error fetching points de vente:', err);
+    }
+  };
+  
+  
+  useEffect(() => {
+    getPdv();
+  }, []);
 
+ ///////////
+ 
+ const fetchData = async () => {
+  try {
+    
+    console.log("Request :", { startDate, endDate, pointDeVente: selectedPointDeVente });
+    const response = await axios.get('http://localhost:3000/api/v1/commandes/filter', {
+      params: {
+        startDate ,
+        endDate ,
+        pointVenteId: selectedPointDeVente,
+      },
+    });
+
+    setGridData(response.data);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+};
+
+  // FILTERS
+  const handleApplyFilters = () => {
+    fetchData();
+    setFiltersApplied(true)
+  };
     
     // Format the month as two digits (e.g., '01' for January, '12' for December)
     const formattedMonth = month < 10 ? `0${month}` : `${month}`;
@@ -82,52 +145,46 @@ const Home = () =>
   };
     
  
-  // fuction to check stock created 
+ // fuction to check stock created 
 
-  const checkStockForToday = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:3000/api/v1/stocks/check/${authCtx.id}`,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const { hasStock } = response.data;
-      console.log("test stock :",hasStock)
-      setStockExists(hasStock);
-    } catch (error) {
-      console.error("Error checking stock:", error);
-    }
-  };
-
-  
-  
-
-
-
-
-
-    const checkCommande = async ()=>{
-      try{
-        const response = await axios.get(`http://localhost:3000/api/v1/commandes/check/${authCtx.id}`, {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json', 
-          }
-        })
-          const commandeId = response.data.hasCommande;
-          console.log("today",commandeId);
-        setCommandeExists(commandeId);
-        
-      }catch(error) {
-          console.error('Error fetching pertess:', error);
+ const checkStockForToday = async () => {
+  try {
+    const response = await axios.get(
+      `http://localhost:3000/api/v1/stocks/check/${authCtx.id}`,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
-      
-    }
+    );
+    const { hasStock } = response.data;
+    console.log("test stock :",hasStock)
+    setStockExists(hasStock);
+  } catch (error) {
+    console.error("Error checking stock:", error);
+  }
+};
+  
 
+const checkCommande = async ()=>{
+  try{
+    const response = await axios.get(`http://localhost:3000/api/v1/commandes/check/${authCtx.id}`, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json', 
+      }
+    })
+      const commandeId = response.data.hasCommande;
+      console.log("today",commandeId);
+    setCommandeExists(commandeId);
+    
+  }catch(error) {
+      console.error('Error fetching pertess:', error);
+  }
+  
+}
+  
     useEffect(()=>{
       checkCommande()
       checkStockForToday()
@@ -143,7 +200,7 @@ const Home = () =>
 
       const handleCreateCommande = () => {
         if (stockExists) {
-          alert("Vous pouvez créé votre commande pour aujourd'hui.");
+         
           navigate('/commande');
         } else {
           alert("Vous devez créé un stock d'abord !");
@@ -377,11 +434,104 @@ const Home = () =>
         date={date}
         />
       </Box>
-    </Box>
 
-    );
-    
-    
-}
 
+    {/* Filters Section */}
+    {/* {(role === 'admin') && ( */}
+    <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            display: 'flex',
+            gap: '50px',
+            flexDirection: 'row',
+            alignItems: 'center',
+           
+            margin: '80px',
+            padding: '20px',
+            backgroundColor: colors.pinkAccent[500],
+            borderRadius: '10px',
+          }}
+        >
+          <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+            Filters
+          </Typography>
+
+          {/* Start Date */}
+          <input
+  type="date"
+  value={startDate}
+  onChange={(e) => setStartDate(e.target.value)}
+  style={{ marginRight: '10px' }}
+/>
+
+
+          {/* End Date */}
+         <input
+  type="date"
+  value={endDate}
+  onChange={(e) => setEndDate(e.target.value)}
+  style={{ marginRight: '10px' }}
+/>
+
+
+ {/* Point de Vente Dropdown */}
+<Select
+  value={selectedPointDeVente}
+  onChange={(e) => setSelectedPointDeVente(e.target.value)}
+  displayEmpty
+>
+  <MenuItem value="" disabled>
+    Select Point de Vente
+  </MenuItem>
+  {pdv.map((pointDeVente) => (
+    <MenuItem key={pointDeVente.id} value={pointDeVente.id}>
+      {pointDeVente.nomPointVente}
+    </MenuItem>
+  ))}
+</Select>
+
+
+
+          {/* Button to apply filters */}
+          <Button variant="contained" onClick={handleApplyFilters}>
+            Apply Filters
+          </Button>
+        </Box>
+    
+        {/* Data Grid Section */}
+        {filtersApplied && (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            margin: '20px',
+            padding: '10px',
+            backgroundColor: colors.pinkAccent[500],
+            borderRadius: '10px',
+          }}
+        >
+          <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+            Data Grid
+          </Typography>
+          {/* Material-UI DataGrid */}
+          <DataGrid
+            rows={gridData}
+            columns={[
+              { field: 'id', headerName: 'ID', width: 90 },
+            
+            ]}
+            pageSize={5}
+            rowsPerPageOptions={[5, 10, 20]}
+          />
+
+        </Box>
+         )} 
+         
+        
+      </Box>
+     
+  );  
+};
 export default Home;
