@@ -20,74 +20,10 @@ const StockView = () => {
     const [suite, setSuite] = useState([]);
     const [kilo, setKilo] = useState([]);
     const [fourniture, setFourniture] = useState([]);
- 
-
-
-//     async function fetchData() {
-//           let suiteIndex = 0;
-//           let kiloIndex = 0;
-//           let fournitureIndex = 0;
-      
-//           try {
-//               const response = await axios.get(`http://localhost:3000/api/v1/stockItem/stock/${stockId}`, {
-//                   withCredentials: true,
-//                   headers: {
-//                       'Content-Type': 'application/json',
-//                       'Authorization': `Bearer ${token}`
-//                   }
-//               });
-      
-//               console.log("Stock response:", response);
-
-//     let indexCounter = 0;
-
-//     const promises = response.data.map(async (item) => {
-//       const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${item.produitId}`, {
-//         withCredentials: true,
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${token}`
-//         }
-//       });
-
-//       const nomProduit = produitResponse.data.nomProduit;
-//       const classProduit = produitResponse.data.class;
-
-//       let newItem = {
-//         index: indexCounter++,
-//         idProduit: item.produitId,
-//         produit: nomProduit,
-//         quantity: item.quantity,
-//         loss: item.loss,
-//         type: item.type
-//       };
-
-//       console.log("New Item:", newItem);
-//       return newItem;
-//     });
-
-//     const results = await Promise.all(promises);
-//     console.log("Results:", results);
-
-//     const suiteArray = results.filter(item => item.type === "SUITE");
-//     const kiloArray = results.filter(item => item.type === "KG");
-//     const fournitureArray = results.filter(item => item.type === "FOURNITURE");
-
-//     console.log("Suite Array:", suiteArray);
-//     console.log("Kilo Array:", kiloArray);
-//     console.log("Fourniture Array:", fournitureArray);
-
-//     setSuite(suiteArray);
-//     setKilo(kiloArray);
-//     setFourniture(fournitureArray);
-
-//   } catch (err) {
-//     console.log(err);
-//   }
-// }
-
-
-
+    const handleModify = () => {
+      navigate(`/stock/edit/${stockId}`);
+    };
+    
     async function fetchData() {
       let suiteIndex = 0;
       let kiloIndex = 0;
@@ -240,6 +176,13 @@ const StockView = () => {
    return (
     <Box m="20px">
       <Header title="Stock"  />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleModify}
+      >
+        Modifier stock
+      </Button>
       <Box
         m="40px 0 0 0"
         height="75vh"

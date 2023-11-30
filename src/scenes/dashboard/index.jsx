@@ -38,6 +38,7 @@ import NotificationCenter from "../../components/notificationsCenter";
 import Pertes from "../pertes"
 import Stock from "../stock";
 import StockView from "../stock/readonly";
+import StockModify from "../stock/edit";
 
 
 
@@ -82,10 +83,12 @@ import StockView from "../stock/readonly";
                 <Route path="/" element={<Home />} />
                 <Route path="/contacts" element={<Contacts />} />
                 <Route path="/commande" element={<Invoices />} />
+                <Route path="/commande/:id" element={<CommandeInfo />} />
                 {/* <Route path="/ajouterCommande/:id" element={<AddCommande />} /> */}
                 <Route path="/bonCommande/:id" element={<AddBon />} />
                 <Route path="/bonCommande/info/:id" element={<Bcinfo />} />
                 <Route path="/pointsVentes" element={<Points />} />
+                <Route path="/livraison" element={<Livraison />} />
                 <Route path="/livraison/info/:id" element={<LivraisonInfo />}  />
               </Routes>
             </main>
@@ -112,6 +115,8 @@ import StockView from "../stock/readonly";
                 <Route path="/pertes" element={<Pertes />} />
                 <Route path="/stock" element={<Stock />} />
                 <Route path="/stock/info/:id" element={<StockView />} />
+                <Route path="/stock/edit/:id" element={<StockModify />} />
+
 
               </Routes>
             </main>

@@ -165,6 +165,7 @@ const renderProductsByTypeAndClass = () => {
                                     flavorType={product.type}
                                     isAvailable={product.availability}
                                     flavorId={product.idProduit}
+                                    reference={product.reference}
                                     removeProduit={handleRemove}
                                 />
                             </Grid>

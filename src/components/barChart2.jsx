@@ -35,44 +35,43 @@ const BarChart = ({date}) => {
   
       return { startDate, middleDate, endDate };
   };
-    async function fetchData(){
-      try {
-        const { startDate, middleDate, endDate } = getMonthStartAndMiddleDates(date);
-        const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-    
-        const stats = await Promise.all(pointVentes.data.map(async (point) => {
-          const firstHalfEndDate = `${startDate}-${middleDate}`;
-          const secondHalfStartDate = `${middleDate}-${endDate}`;
-    
-          const orderItemFirstHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${firstHalfEndDate}&pointVenteId=${point.idPointVente}`);
-          const orderItemSecondHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${secondHalfStartDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`);
-    
-          const stat = {
-            index: point.nomPointVente,
-            "consommation-réel-first-half": orderItemFirstHalf.data,
-            "consommation-réel-second-half": orderItemSecondHalf.data,
-          };
-    
-          return stat;
-        }));
-          
-          console.log('points : ',pointVentes.data)
-          console.log('stats', stats)
-          setDataStat(stats)
+  async function fetchData() {
+    try {
+      const { startDate, middleDate, endDate } = getMonthStartAndMiddleDates(date);
+      const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes', {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : undefined,
         }
-        catch (error) {
-          console.log(error)
-        }
-      }
-      useEffect(()=>{
-        fetchData()
-      },[date])
+      });
+
+      const stats = await Promise.all(pointVentes.data.map(async (point) => {
+        const firstHalfEndDate = `${startDate}-${middleDate}`;
+        const secondHalfStartDate = `${middleDate}-${endDate}`;
+
+        const orderItemFirstHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${firstHalfEndDate}&pointVenteId=${point.idPointVente}`);
+        const orderItemSecondHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${secondHalfStartDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`);
+
+       const stat = {
+  index: point.nomPointVente,
+  "consommation-réel-first-half": { value: orderItemFirstHalf.data },
+  "consommation-réel-second-half": { value: orderItemSecondHalf.data },
+};
+
+        return stat;
+      }));
+
+      console.log("stat", stats , "start date " ,middleDate, "end date " ,endDate );
+      setDataStat(stats);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      
+    }
+  }
+useEffect(() => {
+    fetchData();
+  }, [date]);
 
 
   return (

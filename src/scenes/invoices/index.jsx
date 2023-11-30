@@ -465,50 +465,16 @@ const handleViewCommand = async (commandId) => {
     console.log('data changed :',data)
   },[data])
   
-  const handleClick =async () => {
-    try {
-      const CommandeResponse = await axios.post('http://localhost:3000/api/v1/commandes',{
-        idPointVente:parseInt(id),
-      },{
-        withCredentials: true,
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-        }
-      })
-      const newCommandId = CommandeResponse.data.idCommande; // Assuming the ID property is named idCommande
-      console.log(newCommandId);
-      const FabricationResponse = await axios.put('http://localhost:3000/api/v1/fabrication',{
-        idPointVente: id,
-        nouvelleCommandeId: newCommandId
-      },{
-        withCredentials: true,
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-        }
-      })
-      console.log(FabricationResponse.data)
-      const ch = "Une Nouvelle Commande a été ajouter par "+authCtx.name;
-      const not = await axios.post('http://localhost:3000/api/v1/notifications',{
-        text:ch,
-        target:  ["RESPONSABLE_LOGISTIQUE"] ,
-      })
-      navigate(`/ajouterCommande/${newCommandId}`);
-    }
-    catch(err) {
-      console.log(err)
-    }
-   
   
   
-}
+  
+
 
   return (
     <Box ml="20px" mt="20px">
       <Box display='flex' justifyContent='space-between'>
       <Header title=" Commandes "  /> 
-        {(role === 'POINT_DE_VENTE') && (
+        {/* {(role === 'POINT_DE_VENTE') && (
           <Button sx={{
               color: colors.primary[100],
                 background: colors.primary[400],
@@ -520,7 +486,7 @@ const handleViewCommand = async (commandId) => {
                   color:colors.pinkAccent[400],
                   background: colors.primary[500]                }
           }}
-          onClick={handleClick}>
+          >
             <AddIcon/>
             Nouvelle Commande
            </Button>
@@ -550,7 +516,7 @@ const handleViewCommand = async (commandId) => {
           // </Fab>
         )
           
-        }
+        } */}
 
 
  {/* Delete All */}

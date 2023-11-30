@@ -1,5 +1,5 @@
 import { AuthContext } from "../../contexts/Auth";
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 import { useEffect,useContext, useState } from "react";
 import Header from "../../components/Header";
 import IceCreamCard from "../../components/flavorCard";
@@ -23,6 +23,7 @@ const Home = () =>
     const token = authCtx.isAuthenticated;
     const name = authCtx.name
     var role = authCtx.role
+    const id = authCtx.id
     const navigate = useNavigate()
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
@@ -35,14 +36,15 @@ const Home = () =>
 
     const [selectedDateRange, setSelectedDateRange] = useState(null);
     const [pdv,setPdv] = useState([]);
-const [gridData, setGridData] = useState([]);
+const [gridData, setGridData] = useState({});
+
   const [startDate, setStartDate] = useState();
   const [endDate, setEndDate] = useState();
   const [selectedPointDeVente, setSelectedPointDeVente] = useState('');
   const [filtersApplied, setFiltersApplied] = useState(false);
-  
-  
- 
+  const [suiteData, setSuiteData] = useState([]);
+  const [kiloData, setKiloData] = useState([]);
+  const [fournitureData, setFournitureData] = useState([]);
   
   //*** */
   const getPdv = async () => {
@@ -69,29 +71,107 @@ const [gridData, setGridData] = useState([]);
 
  ///////////
  
- const fetchData = async () => {
-  try {
-    
-    console.log("Request :", { startDate, endDate, pointDeVente: selectedPointDeVente });
-    const response = await axios.get('http://localhost:3000/api/v1/commandes/filter', {
-      params: {
-        startDate ,
-        endDate ,
-        pointVenteId: selectedPointDeVente,
-      },
-    });
+  // Function to fetch filtered data
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/commandes/filter', {
+        params: {
+          startDate,
+          endDate,
+          pointVenteId: selectedPointDeVente,
+        },
+      });
+  console.log( response.data.data )
+  const suiteData = response.data.data.filter(item => item.produit.type === 'SUITE' || item.type === 'SUITE');
+  const kiloData = response.data.data.filter(item => item.produit.type === 'KG' || item.type === 'KG');
+  const fournitureData = response.data.data.filter(item => item.produit.type === 'FOURNITURE' || item.type === 'FOURNITURE');
+  
+      const sumSuiteData = suiteData.reduce((result, orderItem) => {
+        const existingItem = result.find(item => item.produitId === orderItem.produit.idProduit);
+        if (existingItem) {
+          existingItem.quantity += orderItem.quantity;
+          existingItem.suiteCommande += orderItem.suiteCommande;
+        } else {
+          result.push({ ...orderItem, produitId: orderItem.produit.idProduit });
+        }
+        return result;
+      }, []);
+  
+      const sumKiloData = kiloData.reduce((result, orderItem) => {
+        const existingItem = result.find(item => item.produitId === orderItem.produit.idProduit);
+        if (existingItem) {
+          existingItem.quantity += orderItem.quantity;
+         
+        } else {
+          result.push({ ...orderItem, produitId: orderItem.produit.idProduit });
+        }
+        return result;
+      }, []);
+  
+      const sumFournitureData = fournitureData.reduce((result, orderItem) => {
+        const existingItem = result.find(item => item.produitId === orderItem.produit.idProduit);
+        if (existingItem) {
+          existingItem.quantity += orderItem.quantity;
+          
+        } else {
+          result.push({ ...orderItem, produitId: orderItem.produit.idProduit });
+        }
+        return result;
+      }, []);
+      console.log('Suite Data:', suiteData);
+      console.log('Kilo Data:', kiloData);
+      console.log('Fourniture Data:', fournitureData);
+      
+      setGridData({
+        suiteData: sumSuiteData,
+        kiloData: sumKiloData,
+        fournitureData: sumFournitureData,
+      });
+      setSuiteData(sumSuiteData);
+      setKiloData(sumKiloData);
+      setFournitureData(sumFournitureData);
+   
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  
+  
 
-    setGridData(response.data);
-  } catch (error) {
-    console.error('Error fetching data:', error);
+  useEffect(() => {
+    if (startDate && endDate && selectedPointDeVente) {
+      fetchData();
+    }
+  }, [startDate, endDate, selectedPointDeVente]);
+
+useEffect(() => {
+  if (suiteData.length > 0) {
+    const modifiedSuiteData = suiteData.map((row, index) => ({ ...row, gridId: index }));
+    setSuiteData(modifiedSuiteData);
   }
-};
+  if (kiloData.length > 0) {
+    const modifiedKiloData = kiloData.map((row, index) => ({ ...row, gridId: index }));
+    setKiloData(modifiedKiloData);
+  }
+  if (fournitureData.length > 0) {
+    const modifiedFournitureData = fournitureData.map((row, index) => ({ ...row, gridId: index }));
+    setFournitureData(modifiedFournitureData);
+  }
+  }, [gridData.suiteData, gridData.kiloData, gridData.fournitureData]);
+
+  
+
+
+
+
 
   // FILTERS
   const handleApplyFilters = () => {
+    console.log('filteeeers' , gridData.data)
     fetchData();
     setFiltersApplied(true)
   };
+
     
     // Format the month as two digits (e.g., '01' for January, '12' for December)
     const formattedMonth = month < 10 ? `0${month}` : `${month}`;
@@ -105,7 +185,8 @@ const [gridData, setGridData] = useState([]);
     //states for checking order 
     const [stockExists, setStockExists] = useState();
     const [commandeExists, setCommandeExists] = useState();
-
+   
+    const [commandeValide, setCommandeValide] = useState();
 
     
 
@@ -167,24 +248,84 @@ const [gridData, setGridData] = useState([]);
 };
   
 
-const checkCommande = async ()=>{
-  try{
+//
+const checkCommande = async () => {
+  try {
     const response = await axios.get(`http://localhost:3000/api/v1/commandes/check/${authCtx.id}`, {
       withCredentials: true,
       headers: {
         'Content-Type': 'application/json', 
       }
-    })
-      const commandeId = response.data.hasCommande;
-      console.log("today",commandeId);
-    setCommandeExists(commandeId);
+    });
+
+    console.log("Server Response:", response.data);
+
+    const { hasCommande, isValidated } = response.data;
+
+    console.log("Commande Exists:", hasCommande);
+    console.log("All Validated:", isValidated);
+
+    setCommandeExists(hasCommande);
+    setCommandeValide(isValidated);
+
+    if (hasCommande) {
+      console.log("Commande is valid");
+    }
     
-  }catch(error) {
-      console.error('Error fetching pertess:', error);
+  } catch (error) {
+    console.error('Error fetching commandes:', error);
   }
-  
+};
+
+
+
+
+
+const handleClick =async () => {
+  if (stockExists) {
+  try {
+    
+    const CommandeResponse = await axios.post('http://localhost:3000/api/v1/commandes',{
+      idPointVente:parseInt(id),
+    },{
+      withCredentials: true,
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+      }
+    })
+    const newCommandId = CommandeResponse.data.idCommande; // Assuming the ID property is named idCommande
+    console.log(newCommandId);
+    const FabricationResponse = await axios.put('http://localhost:3000/api/v1/fabrication',{
+      idPointVente: id,
+      nouvelleCommandeId: newCommandId
+    },{
+      withCredentials: true,
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+      }
+    })
+    console.log(FabricationResponse.data)
+    const ch = "Une Nouvelle Commande a été ajouter par "+authCtx.name;
+    const not = await axios.post('http://localhost:3000/api/v1/notifications',{
+      text:ch,
+      target:  ["RESPONSABLE_LOGISTIQUE"] ,
+    })
+    navigate(`/ajouterCommande/${newCommandId}`);
+  }
+  catch(err) {
+    console.log(err)
+  }
+ 
+  }
+
 }
-  
+
+
+
+
+
     useEffect(()=>{
       checkCommande()
       checkStockForToday()
@@ -208,6 +349,7 @@ const checkCommande = async ()=>{
       };
 
 
+      
 
      
 
@@ -215,7 +357,62 @@ const checkCommande = async ()=>{
         navigate('/stock');
       };
 
-
+      const kiloColumns = [
+        {
+          id: 1,
+          field: 'produit.nomProduit',
+          headerName: 'SPECIAL',
+          flex: 0.5,
+          cellClassName: 'name-column--cell',
+          valueGetter: (params) => params.row.produit.nomProduit,
+        },
+        {
+          id: 2,
+          field: 'quantity',
+          headerName: 'Kilo Quantity',
+          flex: 0.5,
+          cellClassName: 'name-column--cell',
+        },
+      ];
+      
+      const fournitureColumns = [
+        {
+          id: 1,
+          field: 'produit.nomProduit',
+          headerName: 'FOURNITURE',
+          flex: 0.5,
+          cellClassName: 'name-column--cell',
+          valueGetter: (params) => params.row.produit.nomProduit,
+        },
+        {
+          id: 2,
+          field: 'quantity',
+          headerName: 'Fourniture Quantity',
+          flex: 0.5,
+          cellClassName: 'name-column--cell',
+        },
+      ];
+      
+      const Columns = [
+        {
+          id: 1,
+          field: 'produit.nomProduit',
+          headerName: 'SUITE',
+          flex: 0.5,
+          cellClassName: 'name-column--cell',
+          valueGetter: (params) => params.row.produit.nomProduit,
+        },
+        {
+          id: 2,
+          field: 'quantity',
+          headerName: 'Quantity',
+          flex: 0.5,
+          cellClassName: 'name-column--cell',
+        },
+        
+       
+      ];
+      
 
       return (
         <Box>
@@ -231,7 +428,7 @@ const checkCommande = async ()=>{
             >
               {/* Stock Section */}
               <div style={{ flex: 1 }}>
-                {stockExists===null? (
+              {stockExists === null || commandeValide === true ?  (
                   <Paper
                     elevation={3}
                     sx={{
@@ -299,7 +496,7 @@ const checkCommande = async ()=>{
       
               {/* Commande Section */}
               <div style={{ flex: 1 }}>
-                {commandeExists===null? (
+                {(commandeExists === null || commandeValide) ?(
                   <Paper
                     elevation={3}
                     sx={{
@@ -321,7 +518,10 @@ const checkCommande = async ()=>{
                         marginTop: 5,
                         backgroundColor: colors.pinkAccent[400],
                       }}
-                      onClick={handleCreateCommande}
+                      onClick={() => {
+                        // handleCreateCommande();
+                        handleClick();
+                      }}
                     >
                       Créer une commande
                     </Button>
@@ -500,35 +700,111 @@ const checkCommande = async ()=>{
         </Box>
     
         {/* Data Grid Section */}
-        {filtersApplied && (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            margin: '20px',
-            padding: '10px',
-            backgroundColor: colors.pinkAccent[500],
-            borderRadius: '10px',
-          }}
-        >
-          <Typography variant="h6" sx={{ marginBottom: '10px' }}>
-            Data Grid
-          </Typography>
-          {/* Material-UI DataGrid */}
-          <DataGrid
-            rows={gridData}
-            columns={[
-              { field: 'id', headerName: 'ID', width: 90 },
-            
-            ]}
-            pageSize={5}
-            rowsPerPageOptions={[5, 10, 20]}
-          />
 
+        {filtersApplied && gridData.data && (
+  <Box
+    m="40px"
+    height="75vh"
+    width="150vh"
+    sx={{
+      flexDirection: 'column',
+      display: 'flex',
+      gap: '50px',
+      flexDirection: 'row',
+      alignItems: 'center',
+      margin: '80px',
+      padding: '20px',
+      "& .MuiDataGrid-root": {
+        borderColor: colors.primary[400],
+      },
+      "& .MuiDataGrid-root": {
+        borderColor: colors.primary[400],
+      },
+      "& .MuiDataGrid-cell": {
+        borderColor: colors.primary[300],
+      },
+      "& .name-column--cell": {
+        color: colors.greenAccent[300],
+      },
+      "& .MuiDataGrid-columnHeaders": {
+        backgroundColor: colors.primary[400],
+        borderBottom: "none",
+      },
+      "& .MuiDataGrid-virtualScroller": {
+        backgroundColor: colors.primary[500],
+      },
+      "& .MuiDataGrid-footerContainer": {
+        borderTop: "none",
+        backgroundColor: colors.primary[400],
+      },
+      "& .MuiCheckbox-root": {
+        color: `${colors.greenAccent[200]} !important`,
+      },
+      "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+        color: `${colors.grey[100]} !important`,
+      },
+    }}
+  >
+    {/* Suite Data Grid */}
+    {suiteData.length > 0 && (
+      <Box m="40px">
+        <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+          Suite Data
+        </Typography>
+        <DataGrid
+          density="comfortable"
+          getRowId={(row) => row.idOrderItem}
+          rows={suiteData}
+          columns={Columns}
+          pageSize={10}
+          rowsPerPageOptions={[10, 15, 20]}
+        />
+      </Box>
+    )}
+
+    {/* Kilo Data Grid */}
+    {kiloData.length > 0 && (
+      <Box m="40px">
+        <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+          Kilo Data
+        </Typography>
+        <DataGrid
+          density="comfortable"
+          getRowId={(row) => row.idOrderItem}
+          rows={kiloData}
+          columns={kiloColumns}
+          pageSize={10}
+          rowsPerPageOptions={[10, 15, 20]}
+        />
+      </Box>
+    )}
+
+    {/* Fourniture Data Grid */}
+    {fournitureData.length > 0 && (
+      <Box m="40px">
+        <Typography variant="h6" sx={{ marginBottom: '10px' }}>
+          Fourniture Data
+        </Typography>
+        <DataGrid
+          density="comfortable"
+          getRowId={(row) => row.idOrderItem}
+          rows={fournitureData}
+          columns={fournitureColumns}
+          pageSize={10}
+          rowsPerPageOptions={[10, 15, 20]}
+        />
         </Box>
-         )} 
-         
+    )}
+
+  </Box>
+)}
+
+
+
+
+
+  
+
         
       </Box>
      
