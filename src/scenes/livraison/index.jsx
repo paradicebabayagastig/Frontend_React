@@ -24,6 +24,11 @@ const Invoices = () => {
   const [data,setData] = useState([]); 
 
  
+  
+
+
+
+
  // for the soorttt arrow 
  const [sortModel, setSortModel] = React.useState([{ field: 'dateCommande', sort: 'desc' }]);
  const handleSortModelChange = (newModel) => {
@@ -199,25 +204,53 @@ const handleDeleteAll = async () => {
       headerName: "Date Livraison",
       flex: 0.25,
     },
+   
+   
     {
-      id:5,
+      id: 5,
       headerName: "Validation Reception",
       flex: 0.25,
       cellClassName: "point-column--cell",
       renderCell: (params) => (
-        <Box
-        display="flex"
-        gap={0.25}
-        alignItems="center"
-        >
-          {params.row.validationReception? (<Icon><ThumbUpAltIcon/></Icon>):(<Icon><CloseIcon/></Icon>)}
-          
+        <Box display="flex" gap={0.25} alignItems="center">
+          {role === 'POINT_DE_VENTE' ? (
+            
+            <FormControlLabel
+              sx={{
+                color: colors.pinkAccent[400],
+              }}
+              control={
+                <Checkbox
+                  name="loading"
+                  checked={params.row.validationReception}
+                  onChange={() => handleChange(params.row.idCommande)}
+                  color="default"
+                  sx={{
+                    color: colors.pinkAccent[200],
+                  }}
+                  disabled={params.row.validationReception}
+                />
+              }
+            />
+          ) : (
+            
+            params.row.validationReception ? (
+              <Icon>
+                <ThumbUpAltIcon />
+              </Icon>
+            ) : (
+              <Icon>
+                <CloseIcon />
+              </Icon>
+            )
+          )}
         </Box>
-      )
-
+      ),
     },
+
+
     {
-      id:4,
+      id:6,
       field: "Action",
       headerName: "Action",
       flex: 0.25,

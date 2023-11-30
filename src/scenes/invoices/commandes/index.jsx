@@ -222,7 +222,7 @@ const CommandeInfo = () => {
       justifyContent="space-between"
       >
         <Header title={message}  />
-        <Button sx={{
+        {/* <Button sx={{
           color:colors.primary[100],
           marginRight:5,
           backgroundColor:colors.primary[400],
@@ -244,7 +244,7 @@ const CommandeInfo = () => {
           }}>
             <EditIcon />
           </Icon>
-          </Button>
+          </Button> */}
           
       </Box>
       

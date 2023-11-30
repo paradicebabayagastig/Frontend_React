@@ -16,6 +16,7 @@ const LivraisonInfo = () => {
       const commandeId = parseInt(params.id);
         const authCtx = useContext(AuthContext)
         const token = authCtx.isAuthenticated;
+        const role = authCtx.role
         const theme = useTheme();
         const colors = tokens(theme.palette.mode);
         const [aggregatedData, setAggregatedData] = useState({
@@ -294,6 +295,7 @@ const LivraisonInfo = () => {
       justifyContent="space-between"
       >
         <Header title={message}  />
+        {role === 'RESPONSABLE_LOGISTIQUE' ? (
         <Link to={editLinkString}>
         <Button 
         sx={{
@@ -319,8 +321,9 @@ const LivraisonInfo = () => {
             <EditIcon />
           </Icon>
           </Button>
+          
         </Link>
-        
+  ) : null }
           
       </Box>
       

@@ -11,7 +11,7 @@ function MyAccordion({ id, chefGlacierId, name, allow, expandedChildId, onExpand
   const navigate = useNavigate();
   const [chefId, setChefId] = useState(chefGlacierId);
   const [checked, setChecked] = useState(allow);
-  const [realConsumption, setRealConsumption] = useState({});
+  const [realConsumption, setRealConsumption] = useState(0);
   const [refresh, setRefresh] = useState(false);
   const currentDate = new Date();
   const yesterday = new Date(currentDate);
@@ -37,12 +37,18 @@ const fetchRealConsumption = async () => {
     console.log('startDate:', startDate, 'endDate:', endDate);
     console.log('API Response:', response.data);
     
-    setRealConsumption(response.data.length === 0 ? 0 : response.data);
+   
+    setRealConsumption(response.data);
+
 
   } catch (error) {
     console.log(error);
   }
 };
+
+useEffect(() => {
+  console.log('C Real Consumption:', realConsumption);
+}, [realConsumption]);
 
 useEffect(() => {
   fetchData(); 
@@ -82,7 +88,7 @@ useEffect(() => {
   const authCtx = useContext(AuthContext);
   const token = authCtx.isAuthenticated;
   const [chefs, setChefs] = useState([]);
-  const userRole = authCtx.role; // Assuming you have a 'role' property in your AuthContext
+  const userRole = authCtx.role; 
 
   const fetchData = async () => {
     try {
@@ -163,8 +169,10 @@ useEffect(() => {
           </>
         ) : (
           <Typography>
-          Real Consumption: {realConsumption !== undefined ? realConsumption : 0}
-        </Typography>
+            Real Consumption: {realConsumption}
+          </Typography>
+        
+        
         
         
 

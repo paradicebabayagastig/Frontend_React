@@ -14,61 +14,65 @@ const BarChart = ({date}) => {
     const token = authCtx.isAuthenticated;
   
     const getMonthStartAndMiddleDates = (date) => {
-      // Split the date string into year and month parts
       const [year, month] = date.split('-').map(Number);
-  
+    
       // Calculate the last day of the month
       const lastDay = new Date(year, month, 0).getDate();
-  
+    
       // Calculate the middle day of the month
       const middleDay = Math.ceil(lastDay / 2);
-  
+    
       // Format the month, middle day, and last day as two digits
       const formattedMonth = month < 10 ? `0${month}` : `${month}`;
       const formattedMiddleDay = middleDay < 10 ? `0${middleDay}` : `${middleDay}`;
       const formattedLastDay = lastDay < 10 ? `0${lastDay}` : `${lastDay}`;
-  
+    
       // Construct the start and middle dates
       const startDate = `${year}-${formattedMonth}-01`;
       const middleDate = `${year}-${formattedMonth}-${formattedMiddleDay}`;
       const endDate = `${year}-${formattedMonth}-${formattedLastDay}`;
-  
+    
       return { startDate, middleDate, endDate };
-  };
-  async function fetchData() {
-    try {
-      const { startDate, middleDate, endDate } = getMonthStartAndMiddleDates(date);
-      const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes', {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : undefined,
-        }
-      });
+    };
+    
+  
+    async function fetchData() {
+      try {
+        const { startDate, middleDate, endDate } = getMonthStartAndMiddleDates(date);
+    
+        const pointVentes = await axios.get('http://localhost:3000/api/v1/pointsVentes', {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : undefined,
+          }
+        });
+    
+        const stats = await Promise.all(pointVentes.data.map(async (point) => {
+          const firstHalfEndDate = middleDate; 
+          const secondHalfStartDate = endDate;
+    
+          const orderItemFirstHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${firstHalfEndDate}&pointVenteId=${point.idPointVente}`);
+          const orderItemSecondHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${firstHalfEndDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`);
 
-      const stats = await Promise.all(pointVentes.data.map(async (point) => {
-        const firstHalfEndDate = `${startDate}-${middleDate}`;
-        const secondHalfStartDate = `${middleDate}-${endDate}`;
-
-        const orderItemFirstHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${startDate}&endDate=${firstHalfEndDate}&pointVenteId=${point.idPointVente}`);
-        const orderItemSecondHalf = await axios.get(`http://localhost:3000/api/v1/stats/real-consumption/?startDate=${secondHalfStartDate}&endDate=${endDate}&pointVenteId=${point.idPointVente}`);
-
-       const stat = {
-  index: point.nomPointVente,
-  "consommation-réel-first-half": { value: orderItemFirstHalf.data },
-  "consommation-réel-second-half": { value: orderItemSecondHalf.data },
-};
-
-        return stat;
-      }));
-
-      console.log("stat", stats , "start date " ,middleDate, "end date " ,endDate );
-      setDataStat(stats);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      
+          const stat = {
+            index: point.nomPointVente,
+            "consommation-réel-first-half": orderItemFirstHalf.data,
+            "consommation-réel-second-half": orderItemSecondHalf.data,
+          };
+          
+    console.log('stat' , stat)
+          return stat;
+        }));
+    
+        console.log("stat", stats, "start date ", middleDate, "end date ", endDate);
+        setDataStat(stats);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     }
-  }
+    
+    
 useEffect(() => {
     fetchData();
   }, [date]);

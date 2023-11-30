@@ -259,58 +259,119 @@ const handleViewCommand = async (commandId) => {
           gap={5}
           >
               {params.row.checkFabrication? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)}
-              {params.row.livraison? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)}
+              {/* {params.row.livraison? ( <Icon><ThumbUpAltIcon /></Icon>):(<Icon><CloseIcon /></Icon>)} */}
         </Box>
       )
     },
+
+
     {
-      id:5,
-      field:'livraison',
+      id: 5,
+      field: 'livraison',
       headerName: "Livraison",
       flex: 0.25,
       cellClassName: "point-column--cell",
       renderCell: (params) => (
-        <Box 
+        <Box
           display='flex'
           flexDirection='row'
           gap={5}
-          >
-              {params.row.livraison? ( 
-                  <Link to={`/livraison/info/${params.row.idCommande}`}>
+        >
+          {params.row.livraison ? (
+            <>
+              {role === 'RESPONSABLE_LOGISTIQUE' ? (
+                <Link to={`/livraison/info/${params.row.idCommande}`}>
                   <Button sx={{
                     color: 'black',
-                      background: '#70D8BD',
-                      border:1,
-                      borderColor:colors.primary[400],
-                      "&:hover":{
-                        borderColor:'green',
-                        color:'green',
-                        background: colors.primary[500]                }
-                }}
-                >
-                  Afficher
-                 </Button>
-                 </Link>
-              ):(
-                <Button sx={{
-                  color: colors.primary[100],
-                    background: colors.primary[400],
-                    border:1,
-                    borderColor:colors.primary[400],
-                    "&:hover":{
-                      borderColor:colors.pinkAccent[400],
-                      color:colors.pinkAccent[400],
-                      background: colors.primary[500]                }
-              }}
-              onClick={() => handleCreateLivraison(params.row.idCommande)}
-              >
-                Créer
-               </Button>
+                    background: '#70D8BD',
+                    border: 1,
+                    borderColor: colors.primary[400],
+                    "&:hover": {
+                      borderColor: 'green',
+                      color: 'green',
+                      background: colors.primary[500]
+                    }
+                  }}
+                  >
+                    Afficher
+                  </Button>
+                </Link>
+              ) : (
+                <Icon>
+                  <ThumbUpAltIcon />
+                </Icon>
               )}
+            </>
+          ) : (
+            <Icon>
+              <CloseIcon />
+            </Icon>
+          )}
         </Box>
       )
     },
     
+
+
+
+
+
+
+
+
+    
+
+    // {
+    //   id:5,
+    //   field:'livraison',
+    //   headerName: "Livraison",
+    //   flex: 0.25,
+    //   cellClassName: "point-column--cell",
+    //   renderCell: (params) => (
+    //     <Box 
+    //       display='flex'
+    //       flexDirection='row'
+    //       gap={5}
+    //       >
+    //           {params.row.livraison? ( 
+    //               <Link to={`/livraison/info/${params.row.idCommande}`}>
+    //               <Button sx={{
+    //                 color: 'black',
+    //                   background: '#70D8BD',
+    //                   border:1,
+    //                   borderColor:colors.primary[400],
+    //                   "&:hover":{
+    //                     borderColor:'green',
+    //                     color:'green',
+    //                     background: colors.primary[500]                }
+    //             }}
+    //             >
+    //               Afficher
+    //              </Button>
+    //              </Link>
+    //           ):(
+    //             <Button sx={{
+    //               color: colors.primary[100],
+    //                 background: colors.primary[400],
+    //                 border:1,
+    //                 borderColor:colors.primary[400],
+    //                 "&:hover":{
+    //                   borderColor:colors.pinkAccent[400],
+    //                   color:colors.pinkAccent[400],
+    //                   background: colors.primary[500]                }
+    //           }}
+    //           onClick={() => handleCreateLivraison(params.row.idCommande)}
+    //           >
+    //             Créer
+    //            </Button>
+    //           )}
+    //     </Box>
+    //   )
+    // },
+    
+
+
+
     {
       id: 6 ,
       headerName: "Action",
