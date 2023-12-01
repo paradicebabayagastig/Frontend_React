@@ -278,10 +278,10 @@ const handleViewCommand = async (commandId) => {
           gap={5}
         >
           {params.row.livraison ? (
-            <>
-              {role === 'RESPONSABLE_LOGISTIQUE' ? (
-                <Link to={`/livraison/info/${params.row.idCommande}`}>
-                  <Button sx={{
+            role === 'RESPONSABLE_LOGISTIQUE' ? (
+              <Link to={`/livraison/info/${params.row.idCommande}`}>
+                <Button
+                  sx={{
                     color: 'black',
                     background: '#70D8BD',
                     border: 1,
@@ -292,33 +292,42 @@ const handleViewCommand = async (commandId) => {
                       background: colors.primary[500]
                     }
                   }}
-                  >
-                    Afficher
-                  </Button>
-                </Link>
-              ) : (
-                <Icon>
-                  <ThumbUpAltIcon />
-                </Icon>
-              )}
-            </>
+                >
+                  Afficher
+                </Button>
+              </Link>
+            ) : (
+              <Icon>
+                <ThumbUpAltIcon />
+              </Icon>
+            )
           ) : (
-            <Icon>
-              <CloseIcon />
-            </Icon>
+            role === 'RESPONSABLE_LOGISTIQUE' ? (
+              <Button
+                sx={{
+                  color: colors.primary[100],
+                  background: colors.primary[400],
+                  border: 1,
+                  borderColor: colors.primary[400],
+                  "&:hover": {
+                    borderColor: colors.pinkAccent[400],
+                    color: colors.pinkAccent[400],
+                    background: colors.primary[500]
+                  }
+                }}
+                onClick={() => handleCreateLivraison(params.row.idCommande)}
+              >
+                Créer
+              </Button>
+            ) : (
+              <Icon>
+                <CloseIcon />
+              </Icon>
+            )
           )}
         </Box>
       )
     },
-    
-
-
-
-
-
-
-
-
     
 
     // {
@@ -581,7 +590,7 @@ const handleViewCommand = async (commandId) => {
 
 
  {/* Delete All */}
- {(role === 'RESPONSABLE_LOGISTIQUE') && (
+ {(role === 'POINT_DE_VENTE') && (
          <Button
          sx={{
            color: colors.pinkAccent[400],
