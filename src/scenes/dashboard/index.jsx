@@ -152,9 +152,10 @@ import StockModify from "../stock/edit";
             <main className="content">
             <Topbar setIsSidebar={setIsSidebar} />
               <Routes>
-                <Route path="/" element={<Home />} />
+                {/* <Route path="/" element={<Home />} /> */}
+                <Route path="/fabrication" element={<BonFabrications />} />
                 <Route path="/fabrication/info/:id" element={<FabricationInfo />} />
-                <Route path="/bonCommandes" element={<BonsCommandesLite />} />
+                {/* <Route path="/bonCommandes" element={<BonsCommandesLite />} /> */}
                 <Route path="/bonFabrications" element={<BonFabrications />} />
               </Routes>
             </main>

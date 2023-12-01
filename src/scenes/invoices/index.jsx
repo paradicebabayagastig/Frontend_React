@@ -405,7 +405,7 @@ const handleViewCommand = async (commandId) => {
   </Link>
 
   <Link>
-
+  {role === 'POINT_DE_VENTE' && (
   <IconButton
   variant="outlined"
   sx={{
@@ -427,7 +427,7 @@ const handleViewCommand = async (commandId) => {
       <DeleteIcon />
 
   </IconButton>
-
+  )}
   {role === 'RESPONSABLE_LOGISTIQUE' && (
   <Box
     sx={{

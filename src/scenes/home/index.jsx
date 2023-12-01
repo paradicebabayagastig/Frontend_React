@@ -81,7 +81,7 @@ const [gridData, setGridData] = useState({});
           pointVenteId: selectedPointDeVente,
         },
       });
-  console.log( response.data.data )
+  console.log( 'response', response.data.data )
   const suiteData = response.data.data.filter(item => item.produit.type === 'SUITE' || item.type === 'SUITE');
   const kiloData = response.data.data.filter(item => item.produit.type === 'KG' || item.type === 'KG');
   const fournitureData = response.data.data.filter(item => item.produit.type === 'FOURNITURE' || item.type === 'FOURNITURE');
@@ -121,16 +121,23 @@ const [gridData, setGridData] = useState({});
       console.log('Suite Data:', suiteData);
       console.log('Kilo Data:', kiloData);
       console.log('Fourniture Data:', fournitureData);
-      
-      setGridData({
+   
+      setGridData((prevGridData) => ({
+        ...prevGridData,
         suiteData: sumSuiteData,
         kiloData: sumKiloData,
         fournitureData: sumFournitureData,
-      });
+      }));
+      
+      console.log('grid Data2:', gridData);
       setSuiteData(sumSuiteData);
       setKiloData(sumKiloData);
       setFournitureData(sumFournitureData);
-   
+      console.log('Suite Data:', suiteData);
+      console.log('Kilo Data:', kiloData);
+      console.log('Fourniture Data:', fournitureData);
+
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -363,15 +370,15 @@ const handleClick =async () => {
           field: 'produit.nomProduit',
           headerName: 'SPECIAL',
           flex: 0.5,
-          cellClassName: 'name-column--cell',
+       
           valueGetter: (params) => params.row.produit.nomProduit,
         },
         {
           id: 2,
           field: 'quantity',
-          headerName: 'Kilo Quantity',
+          headerName: ' Quantite',
           flex: 0.5,
-          cellClassName: 'name-column--cell',
+         
         },
       ];
       
@@ -381,15 +388,14 @@ const handleClick =async () => {
           field: 'produit.nomProduit',
           headerName: 'FOURNITURE',
           flex: 0.5,
-          cellClassName: 'name-column--cell',
           valueGetter: (params) => params.row.produit.nomProduit,
         },
         {
           id: 2,
           field: 'quantity',
-          headerName: 'Fourniture Quantity',
+          headerName: ' Quantite',
           flex: 0.5,
-          cellClassName: 'name-column--cell',
+         
         },
       ];
       
@@ -399,15 +405,15 @@ const handleClick =async () => {
           field: 'produit.nomProduit',
           headerName: 'SUITE',
           flex: 0.5,
-          cellClassName: 'name-column--cell',
+         
           valueGetter: (params) => params.row.produit.nomProduit,
         },
         {
           id: 2,
           field: 'quantity',
-          headerName: 'Quantity',
+          headerName: 'Quantite',
           flex: 0.5,
-          cellClassName: 'name-column--cell',
+       
         },
         
        
@@ -701,7 +707,7 @@ const handleClick =async () => {
     
         {/* Data Grid Section */}
 
-        {filtersApplied && gridData.data && (
+        {filtersApplied && (
   <Box
     m="40px"
     height="75vh"
@@ -745,12 +751,9 @@ const handleClick =async () => {
       },
     }}
   >
-    {/* Suite Data Grid */}
-    {suiteData.length > 0 && (
-      <Box m="40px">
-        <Typography variant="h6" sx={{ marginBottom: '10px' }}>
-          Suite Data
-        </Typography>
+     {/* Suite Data Grid */}
+     {suiteData.length > 0 && (
+      
         <DataGrid
           density="comfortable"
           getRowId={(row) => row.idOrderItem}
@@ -759,41 +762,36 @@ const handleClick =async () => {
           pageSize={10}
           rowsPerPageOptions={[10, 15, 20]}
         />
-      </Box>
+      
     )}
 
     {/* Kilo Data Grid */}
     {kiloData.length > 0 && (
-      <Box m="40px">
-        <Typography variant="h6" sx={{ marginBottom: '10px' }}>
-          Kilo Data
-        </Typography>
+      
         <DataGrid
           density="comfortable"
-          getRowId={(row) => row.idOrderItem}
+          getRowId={(row) => `kilo-${row.idOrderItem}`}
           rows={kiloData}
           columns={kiloColumns}
           pageSize={10}
           rowsPerPageOptions={[10, 15, 20]}
         />
-      </Box>
+      
     )}
 
     {/* Fourniture Data Grid */}
     {fournitureData.length > 0 && (
-      <Box m="40px">
-        <Typography variant="h6" sx={{ marginBottom: '10px' }}>
-          Fourniture Data
-        </Typography>
+     
+      
         <DataGrid
           density="comfortable"
-          getRowId={(row) => row.idOrderItem}
+          getRowId={(row) => `fourniture-${row.idOrderItem}`}
           rows={fournitureData}
           columns={fournitureColumns}
           pageSize={10}
           rowsPerPageOptions={[10, 15, 20]}
         />
-        </Box>
+      
     )}
 
   </Box>

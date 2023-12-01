@@ -21,13 +21,14 @@ const BonFabrications = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [data,setData] = useState([]); 
+  const [validatedFabrications, setValidatedFabrications] = useState([]);
 
-
+  
    //selected rows for delete all
  const [selectedRows, setSelectedRows] = useState([]);
  const [isAnyRowSelected, setIsAnyRowSelected] = useState(false);
  
- 
+ //
  const handleSelectionChange = (newSelection) => {
    console.log('New selection aaa:', newSelection);
    setSelectedRows(newSelection);
@@ -127,6 +128,25 @@ const handleDelete = async (id) => {
   };
   
 
+// Function to fetch validated fabrications
+const fetchValidatedFabrications = async () => {
+  try {
+    const response = await axios.get(
+      'http://localhost:3000/api/v1/fabrication/validated',
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setValidatedFabrications(response.data);
+  } catch (error) {
+    console.error('Error fetching validated fabrications:', error);
+  }
+};
 
 
 
@@ -169,6 +189,8 @@ const handleDelete = async (id) => {
       console.log(err);
     }
   }
+
+
   const columns = [
     {
       id:1,
@@ -179,132 +201,156 @@ const handleDelete = async (id) => {
       cellClassName: "name-column--cell",
       
     },
-    {
-      id:2,
-      field: "date",
-      headerName: "date",
-      flex: 0.5,
-      renderCell: (params) => <Typography>{params.row.date.toLocaleDateString()}</Typography>,
-      cellClassName: "name-column--cell",
-      
-    },
-    {
+  
+  {
+    id: 2,
+    field: "date",
+    headerName: "Date",
+    flex: 0.5,
+    renderCell: (params) => (
+      <Typography>
+        {role === "RESPONSABLE_LOGISTIQUE"
+          ? params.row.date.toLocaleDateString()
+          : new Date(params.row.dateFabrication).toLocaleDateString()}
+      </Typography>
+    ),
+    cellClassName: "name-column--cell",
+  },
+
+
+    role === "RESPONSABLE_LOGISTIQUE" &&{
       id:3,
       field: "chef",
       headerName: "Chef Glacier",
       sortable: false,
       flex: 0.5,
-    },
-    {
-      id:4,
-      field: "isValid",
-      sortable: false,
-      headerName: "Validation",
-      flex: 1,
-      renderCell: (params) => (
-        <Box
-        sx={{
-            display:"flex",
-            alignItems:"center",
-            gap:20
-        }}>
-        <FormControlLabel
-              sx={{
-                
-                color: colors.pinkAccent[400], // Apply the color based on the state
-              }}
-              control={
-                <Checkbox
-                  name="loading"
-                 // Apply the color based on the state
-                  checked={params.row.isValid}
-                  onChange={() => handleSwitchChange(params.row.idFabrication)}
-                   // Disable the switch once it's pressed
-                   color="default"
-                   sx={{
-                    color:colors.pinkAccent[200] }}
-                    disabled={params.row.isValid}
+    }  ,
+
+
+      role === 'RESPONSABLE_LOGISTIQUE'
+        ? {
+            id: 4,
+            field: 'isValid',
+            sortable: false,
+            headerName: 'Validation',
+            flex: 1,
+            renderCell: (params) => (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 20,
+                }}
+              >
+               
+                <FormControlLabel
+                  sx={{
+                    color: colors.pinkAccent[400],
+                  }}
+                  control={
+                    <Checkbox
+                      name="loading"
+                      checked={params.row.isValid}
+                      onChange={() => handleSwitchChange(params.row.idFabrication)}
+                      color="default"
+                      sx={{
+                        color: colors.pinkAccent[200],
+                      }}
+                      disabled={params.row.isValid}
+                    />
+                  }
                 />
-              }
-              />
-              
-              <Link to={`/fabrication/info/${params.row.idFabrication}`}>
-
-            <IconButton
-            variant="outlined"
-            sx={{
-             
-              backgroundColor:colors.primary[400],
-              color:colors.primary[100],
-              "&:hover": {
-                backgroundColor: colors.button[100], // Change background color on hover
-                color: colors.button[200], // Change text color on hover
-              },
-            }}
-            onClick={() => {
-              if (role === 'RESPONSABLE_LOGISTIQUE') {
-                handleViewBonFab(params.row.idFabrication);
-              }
-            }}
-
-            >
-          
-                <MoreVertIcon />
-            
-            </IconButton>
-            
-            <IconButton
-          variant="outlined"
-          sx={{
-            marginLeft:2,
-            backgroundColor:colors.primary[400],
-            color:colors.primary[100],
-            "&:hover": {
-              backgroundColor: colors.button[100], 
-              color: colors.button[200], 
-            },
-          }}
-
-          onClick={(event) => {
-            event.preventDefault(); 
-            event.stopPropagation(); 
-            handleDelete(params.row.idFabrication);
-          }}
-          >
+    
+                <Link to={`/fabrication/info/${params.row.idFabrication}`}>
                  
-              <DeleteIcon />
-
-          </IconButton>
-
-
-            {role === 'RESPONSABLE_LOGISTIQUE' && (
-            <Box
-    sx={{
-      width: '10px',
-      height: '10px',
-      borderRadius: '50%',
-      backgroundColor: (() => {
-        if (params.row.state === 'new') {
-          return 'green';
-        } else if (params.row.state === 'updated') {
-          return 'red'; 
-        } else {
-          return 'grey'; 
-        }
-      })(),
-      marginLeft: '5px',
-      display: 'inline-block',
-    }}
-  ></Box> )}
-
-           
-          </Link>
-            </Box>
-      )
-    },
+                  <IconButton
+                    variant="outlined"
+                    sx={{
+                      backgroundColor: colors.primary[400],
+                      color: colors.primary[100],
+                      "&:hover": {
+                        backgroundColor: colors.button[100],
+                        color: colors.button[200],
+                      },
+                    }}
+                    onClick={() => handleViewBonFab(params.row.idFabrication)}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+    
+               </Link>
+                  <IconButton
+                    variant="outlined"
+                    sx={{
+                      marginLeft: 2,
+                      backgroundColor: colors.primary[400],
+                      color: colors.primary[100],
+                      "&:hover": {
+                        backgroundColor: colors.button[100],
+                        color: colors.button[200],
+                      },
+                    }}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleDelete(params.row.idFabrication);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+    
+                    <Box
+                      sx={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: (() => {
+                          if (params.row.state === 'new') {
+                            return 'green';
+                          } else if (params.row.state === 'updated') {
+                            return 'red';
+                          } else {
+                            return 'grey';
+                          }
+                        })(),
+                        marginLeft: '5px',
+                        display: 'inline-block',
+                      }}
+                    ></Box>
+                 
+                
+              </Box>
+            ),
+          }
+        : {
+            id: 3,
+              field: 'view',
+               headerName: '',
+              sortable : false , 
+        
+        flex: 0.5,
+            renderCell: (params) => (
+             <Link to={`/fabrication/info/${params.row.idFabrication}`}>
+               <IconButton
+                    variant="outlined"
+                    sx={{
+                      backgroundColor: colors.primary[400],
+                      color: colors.primary[100],
+                      "&:hover": {
+                        backgroundColor: colors.button[100],
+                        color: colors.button[200],
+                      },
+                    }}
+                   
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+              </Link>
+            ),
+          },
+    ];
+    
   
-
-  ];
 
   async function fetchData() {
     try {
@@ -351,6 +397,10 @@ const handleDelete = async (id) => {
   
   useEffect(()=>{
     fetchData()
+  },[])
+
+  useEffect(()=>{
+    fetchValidatedFabrications()
   },[])
 
   useEffect(() => {
@@ -430,7 +480,7 @@ const handleDelete = async (id) => {
       >
         <DataGrid
       density="comfortable"
-      rows={data}
+      rows={role === 'RESPONSABLE_LOGISTIQUE' ? data : validatedFabrications}
       getRowId={(row) => row.idFabrication}
       columns={columns}
       checkboxSelection

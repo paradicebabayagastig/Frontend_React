@@ -285,7 +285,7 @@ const handleDeleteAll = async () => {
 
           </Link>
           <Link>
-
+          {role === 'RESPONSABLE_LOGISTIQUE' && (
           <IconButton
           variant="outlined"
           sx={{
@@ -308,7 +308,7 @@ const handleDeleteAll = async () => {
             <DeleteIcon />
 
           </IconButton>
-
+          )}
           {role === 'POINT_DE_VENTE' && (
           <Box
   sx={{

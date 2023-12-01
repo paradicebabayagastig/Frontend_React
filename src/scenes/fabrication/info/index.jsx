@@ -169,7 +169,7 @@ const FabricationInfo = () => {
       flex: 0.125,
       
     },
-    {
+    role === "RESPONSABLE_LOGISTIQUE" && {
       id:3, 
       field: "fabricated",
       editable: true,
@@ -243,14 +243,14 @@ const FabricationInfo = () => {
       headerName:<b>POZZETI SUITE</b>,
       flex:0.25,
     },
-    {
+    role === "RESPONSABLE_LOGISTIQUE" &&{
       id:6,
       field:"fabricated",
       editable: true,
       headerName:<b>QTE FABRIQUE</b>,
       flex:0.25,
     },
-    {
+    role === "RESPONSABLE_LOGISTIQUE" &&{
       id:6,
       field:"pztFabricated",
       editable: true,
@@ -309,6 +309,7 @@ const FabricationInfo = () => {
           
           </Button>
           <Link to={editString}>
+          {role === 'RESPONSABLE_LOGISTIQUE' && (
           <Button sx={{
           color:colors.primary[100],
           marginRight:5,
@@ -322,7 +323,7 @@ const FabricationInfo = () => {
             backgroundColor:colors.pinkAccent[400]
           }
         }}>
-         
+        
           <Typography>
           <b>Modifier</b>
           </Typography>
@@ -332,6 +333,8 @@ const FabricationInfo = () => {
             <EditIcon />
           </Icon>
           </Button>
+          )}
+         
           </Link>
       
 

@@ -1,9 +1,10 @@
-import { Box, Button, CircularProgress, Snackbar, TextField, useTheme } from "@mui/material";
+import React, { useState, useEffect, useContext } from 'react';
+import { Alert, Box, CircularProgress, InputLabel, Select, Snackbar, TextField, useTheme } from "@mui/material";
+import { Button } from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../../theme";
 import Header from "../../../components/Header";
-import { useContext, useEffect, useState } from 'react';
-import { AuthContext } from "../../../contexts/Auth"
+import { AuthContext } from "../../../contexts/Auth";
 import axios from "axios";
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -20,6 +21,20 @@ const StockEdit = () => {
   const [fourniture, setFourniture] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  
+  const handleArrayChange = (setState, prevArray, index, field) => (event) => {
+    let newQuantity = parseFloat(event.target.value);
+  
+    setState((prevState) => {
+      return prevState.map((item) => {
+        if (item.index === index) {
+          return { ...item, [field]: newQuantity };
+        }
+        return item;
+      });
+    });
+  };  
+  
   const handleFieldChange = (arrayType, index, field, newValue) => {
     const updatedArray = [...arrayType];
     const modifiedItem = { ...updatedArray[index] };
@@ -38,64 +53,63 @@ const StockEdit = () => {
 
   const handleEditCellChange = (params) => (event) => {
     const { id, field } = params;
-    const value = event.target.value;
+    const value = parseFloat(event.target.value);
   
     const updatedArray = [...suite, ...kilo, ...fourniture];
     const updatedItemIndex = updatedArray.findIndex((item) => item.idProduit === id);
   
     if (updatedItemIndex !== -1) {
-      const updatedValue = field === 'quantity' || field === 'loss' ? parseFloat(value) : value;
+      const updatedItems = [...updatedArray];
+      const updatedItem = { ...updatedItems[updatedItemIndex], [field]: value };
   
-      updatedArray[updatedItemIndex] = {
-        ...updatedArray[updatedItemIndex],
-        [field]: updatedValue,
-      };
+      updatedItems[updatedItemIndex] = updatedItem;
   
-      const updatedSuite = updatedArray.filter((item) => item.type === "SUITE");
-      const updatedKilo = updatedArray.filter((item) => item.type === "KG");
-      const updatedFourniture = updatedArray.filter((item) => item.type === "FOURNITURE");
-  
-      setSuite(updatedSuite);
-      setKilo(updatedKilo);
-      setFourniture(updatedFourniture);
+      
+      setSuite(updatedItems.filter((item) => item.type === 'SUITE'));
+      setKilo(updatedItems.filter((item) => item.type === 'KG'));
+      setFourniture(updatedItems.filter((item) => item.type === 'FOURNITURE'));
     }
   };
   
 
   const handleEditCellSubmit = async () => {
     const updatedItems = [...suite, ...kilo, ...fourniture];
-  
-    const updatePromises = updatedItems.map(async (item) => {
+
+    try {
+      const updatePromises = updatedItems.map(async (item) => {
         console.log("Current Item:", item);
-      console.log(`Updating stock item with id ${item.idProduit}`);
-      
-      await axios.patch(
-        `http://localhost:3000/api/v1/stockItem/${item.idProduit}`,
-        {
-          quantity: item.quantity,
-          loss: item.loss,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        console.log(`Updating stock item with id ${item.idProduit}`);
+
+        const response = await axios.patch(
+          `http://localhost:3000/api/v1/stockItem/${item.idProduit}`,
+          {
+            quantity: item.quantity,
+            loss: item.loss,
           },
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+       
+        if (response.status === 200) {
+          
+        } else {
+          
+          console.error(`Failed to update stock item with id ${item.idProduit}`);
         }
-      );
-    });
-    console.log("Current updateeeeeee!!!!:", updatePromises);
-    await Promise.all(updatePromises);
-  
-    fetchData();
+      });
+
+      await Promise.all(updatePromises);
+      navigate(`/stock/info/${stockId}`);
+    } catch (error) {
+      console.error("Error updating stock items:", error);
+    }
   };
-  
-
-  
-  
- 
-
-
 
   async function fetchData() {
     let suiteIndex = 0;
@@ -103,91 +117,87 @@ const StockEdit = () => {
     let fournitureIndex = 0;
 
     try {
-        const response = await axios.get(`http://localhost:3000/api/v1/stockItem/stock/${stockId}`, {
-            withCredentials: true,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+      const response = await axios.get(`http://localhost:3000/api/v1/stockItem/stock/${stockId}`, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log("Stock response:", response);
+
+      const promises = response.data.map(async (item) => {
+        const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${item.produitId}`, {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
 
-        console.log("Stock response:", response);
+        console.log("produit response :", produitResponse);
 
-        const promises = response.data.map(async (item) => {
-            const produitResponse = await axios.get(`http://localhost:3000/api/v1/produits/${item.produitId}`, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+        const nomProduit = produitResponse.data.nomProduit;
+        const classProduit = produitResponse.data.class;
 
-            console.log("produit response :", produitResponse);
+        let newItem;
 
-            const nomProduit = produitResponse.data.nomProduit;
-            const classProduit = produitResponse.data.class;
+        if (item.type === "SUITE") {
+          newItem = {
+            index: suiteIndex++,
+            idProduit: item.produitId,
+            produit: nomProduit,
+            quantity: item.quantity,
+            loss: item.loss,
+            type: item.type
+          };
+        } else if (item.type === "KG") {
+          newItem = {
+            index: kiloIndex++,
+            idProduit: item.produitId,
+            produit: nomProduit + ' ' + classProduit,
+            quantity: item.quantity,
+            loss: item.loss,
+            type: item.type
+          };
+        } else if (item.type === "FOURNITURE") {
+          newItem = {
+            index: fournitureIndex++,
+            idProduit: item.produitId,
+            produit: nomProduit,
+            quantity: item.quantity,
+            loss: item.loss,
+            type: item.type
+          };
+        }
+        setLoading(false); 
 
-            let newItem;
+        console.log("New Item:", newItem);
+        return newItem;
+      });
 
-            if (item.type === "SUITE") {
-                newItem = {
-                    index: suiteIndex++,
-                    idProduit: item.produitId,
-                    produit: nomProduit,
-                    quantity: item.quantity,
-                    loss: item.loss,
-                    type: item.type
-                };
-            } else if (item.type === "KG") {
-                newItem = {
-                    index: kiloIndex++,
-                    idProduit: item.produitId,
-                    produit: nomProduit + ' ' + classProduit,
-                    quantity: item.quantity,
-                    loss: item.loss,
-                    type: item.type
-                };
-            } else if (item.type === "FOURNITURE") {
-                newItem = {
-                    index: fournitureIndex++,
-                    idProduit: item.produitId,
-                    produit: nomProduit,
-                    quantity: item.quantity,
-                    loss: item.loss,
-                    type: item.type
-                };
-            }
-            setLoading(true);
+      const results = await Promise.all(promises);
+      console.log("Results:", results);
 
-            console.log("New Item:", newItem);
-            return newItem;
-        });
+      const suiteArray = results.filter(item => item.type === "SUITE");
+      const kiloArray = results.filter(item => item.type === "KG");
+      const fournitureArray = results.filter(item => item.type === "FOURNITURE");
 
-        const results = await Promise.all(promises);
-        console.log("Results:", results);
+      console.log("Suite Array:", suiteArray);
+      console.log("Kilo Array :", kiloArray);
+      console.log("Fourniture Array :", fournitureArray);
 
-        const suiteArray = results.filter(item => item.type === "SUITE");
-        const kiloArray = results.filter(item => item.type === "KG");
-        const fournitureArray = results.filter(item => item.type === "FOURNITURE");
-
-        console.log("Suite Array:", suiteArray);
-        console.log("Kilo Array :", kiloArray);
-        console.log("Fourniture Array :", fournitureArray);
-
-        setSuite(suiteArray);
-        setKilo(kiloArray);
-        setFourniture(fournitureArray);
+      setSuite(suiteArray);
+      setKilo(kiloArray);
+      setFourniture(fournitureArray);
 
     } catch (err) {
-        setLoading(false);
+      setLoading(false);
 
-        console.log(err);
+      console.log(err);
     }
-}
-
-
-
-
+  }
 
   useEffect(() => {
     fetchData();
@@ -195,63 +205,191 @@ const StockEdit = () => {
 
   const suiteColumns = [
     {
-      id:1,
+      id: 1,
       field: "produit",
       headerName: <b>PRODUIT</b>,
       flex: 1,
     },
     {
-      id:3,
+      id: 3,
       field: "quantity",
       headerName: <b>STOCK FINAL</b>,
       flex: 1,
-      editable : true
+      
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(suite[params.row.index]?.quantity ?? 0)}
+              onChange={handleArrayChange(setSuite,suite,params.row.index,'quantity')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                  
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
     },
+       
+    
     {
-      id:4,
+      id: 4,
       field: "loss",
       headerName: <b>JETES</b>,
       flex: 1,
-      editable : true
+     
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(suite[params.row.index]?.loss ?? 0)}
+              onChange={handleArrayChange(setSuite,suite,params.row.index,'loss')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
     }
   ]
   const kiloColumns = [
     {
-      id:1,
+      id: 1,
       field: "produit",
       headerName: <b>PRODUIT</b>,
       flex: 1,
     },
     {
-      id:3,
+      id: 3,
       field: "quantity",
       headerName: <b>STOCK EN LITRES</b>,
       flex: 1,
-      editable : true
+     
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(kilo[params.row.index]?.quantity ?? 0)}
+              onChange={handleArrayChange(setKilo,kilo,params.row.index,'quantity')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
     },
     {
-      id:4,
+      id: 4,
       field: "loss",
       headerName: <b>JETES</b>,
       flex: 1,
-      editable : true
-    }
+    
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(kilo[params.row.index]?.quantity ?? 0)}
+              onChange={handleArrayChange(setKilo,kilo,params.row.index,'loss')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
+    },
   ]
   const fournitureColumns = [
     {
-      id:1,
+      id: 1,
       field: "produit",
       headerName: <b>PRODUIT</b>,
       flex: 1,
     },
     {
-      id:3,
+      id: 3,
       field: "quantity",
       headerName: <b>STOCK FINAL</b>,
       flex: 1,
-      editable : true
+    
+      renderCell: (params) => (
+        <Box sx={{ height: 50 }}>
+        { (
+         
+            <TextField
+              type="number"
+              value={parseFloat(fourniture[params.row.index]?.quantity ?? 0)}
+              onChange={handleArrayChange(setFourniture,fourniture,params.row.index,'quantity')}
+              variant="outlined"
+              sx={{
+                width: 65,
+                '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                  '-webkit-appearance': 'none',
+                  margin: 0,
+                },
+              }}
+              inputProps={{
+                min: 0,
+                step: 0.1,
+              }}
+            />
+     
+        ) }
+      </Box>
+        )
+    
     }]
-
 
   return (
     <Box m="20px">
@@ -263,7 +401,34 @@ const StockEdit = () => {
         m="40px 0 0 0"
         height="75vh"
         display="flex"
-        // Other styles...
+        sx={{
+          "& .MuiDataGrid-root": {
+            borderColor: colors.primary[400],
+          },
+          "& .MuiDataGrid-cell": {
+            borderColor: colors.primary[300],
+          },
+          "& .quantity-column--cell": {
+            color: colors.pinkAccent[300],
+          },
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: colors.primary[400],
+            borderBottom: "none",
+          },
+          "& .MuiDataGrid-virtualScroller": {
+            backgroundColor: colors.primary[500],
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "none",
+            backgroundColor: colors.primary[400],
+          },
+          "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+            color: `${colors.grey[100]} !important`,
+          },
+          "& .MuiCheckbox-root": {
+            color: `${colors.pinkAccent[200]} !important`,
+          },
+        }}
       >
         <DataGrid
           density="comfortable"
@@ -307,7 +472,3 @@ const StockEdit = () => {
 };
 
 export default StockEdit;
-
-
-
-
