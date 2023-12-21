@@ -291,14 +291,15 @@ const LivraisonInfo = () => {
         </Box>
       ) }
       <Box
-      display="flex"
-      justifyContent="space-between"
+       display="flex"
+       flexDirection="column"
+       m="40px 0 0 0"
       >
         <Header title={message}  />
         {role === 'RESPONSABLE_LOGISTIQUE' ? (
         <Link to={editLinkString}>
         <Button 
-        sx={{
+        sx={{ 
           color:colors.primary[100],
           marginRight:5,
           backgroundColor:colors.primary[400],

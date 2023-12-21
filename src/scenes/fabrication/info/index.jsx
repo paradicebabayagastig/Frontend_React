@@ -14,13 +14,24 @@ import React from "react";
 import EditIcon from '@mui/icons-material/Edit';
 
 const FabricationInfo = () => {
-
+ 
       const params = useParams();
       const bonfabricationId = parseInt(params.id);
       const componentRef = React.useRef();
-      const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
-      });
+      const fournitureRef=React.useRef();
+     /* const handlefourniture=useReactToPrint({content:()=>fournitureRef.current,});*/
+     
+    
+    
+     const handlePrint = useReactToPrint({
+      content: () => componentRef.current,
+    });
+    
+    const handlePrintFourniture = useReactToPrint({
+      content: () => fournitureRef.current,
+    });
+    
+    
         const authCtx = useContext(AuthContext)
         const token = authCtx.isAuthenticated;
         const role = authCtx.role
@@ -88,7 +99,7 @@ const FabricationInfo = () => {
               const orderDetails = {
                 index: fabricationOrders.data.indexOf(fabOrder) + 1,
                 produit: produitResponse.data.nomProduit,
-                totalBac: fabOrder.totalBac,
+                totalBac: fabOrder.totalBac,  
                 totalSuite: fabOrder.totalSuite,
                 pztPlaza: fabOrder.PztPlaza,
                 pztAzur: fabOrder.PztAzur,
@@ -284,7 +295,14 @@ const FabricationInfo = () => {
       <Box display="flex" justifyContent='space-between'>
       <Header title={message} />
       <Box display='flex'>
-      <Button onClick={handlePrint} sx={{
+      <Button onClick={() => {
+      
+    handlePrint();
+       
+         
+            
+          }}
+            sx={{
           color:colors.primary[100],
           marginRight:5,
           backgroundColor:colors.primary[400],
@@ -336,8 +354,44 @@ const FabricationInfo = () => {
           )}
          
           </Link>
+        <Box display='flex'>
+       <Button 
+       onClick={() => {
       
+        
+         handlePrintFourniture();
+             }}
+        
+           
+           
+            
+      sx={{
+          color:colors.primary[100],
+          marginRight:5,
+          backgroundColor:colors.primary[400],
+          display:"flex",
+          justifyContent:"center",
+          marginRight:5,
+          marginBottom:5,
+          gap:1.5,
+          "&:hover":{
+            backgroundColor:colors.pinkAccent[400]
+          }
+        }}>
 
+        
+         
+          <Typography>
+          <b>IMPRIMER FOURNITURE</b>
+          </Typography>
+          <Icon sx={{
+            marginBottom:1.5
+          }}>
+            <PrintIcon />
+          </Icon>
+          
+          </Button>
+</Box>
       </Box>
       
 
@@ -446,18 +500,28 @@ const FabricationInfo = () => {
           (role === 'RESPONSABLE_LOGISTIQUE') && (
             (fournitureData && fournitureData.length>0?  <DataGrid
               editMode="row"
+             ref={fournitureRef}  
           rows={fournitureData}
           columns={fournitureColumns}
           getRowId={(row)=>row.index}
           hideScrollbarX = {true} // Hide horizontal scroll bar
-          hideScrollbarY // Hide vertical scroll bar
+          hideScrollbarY
+          sx={{
+            '@media print': {
+              display: fournitureRef?'bloc': 'none' ,
+            },
+          }}
+          
+         // Hide vertical scroll bar
           /> :  <DataGrid 
+          
                 rows={[]}
                 columns={fournitureColumns}
-                sx={{
-                  flex: 1.75
-                }}
-                /> )
+                ref={fournitureRef}
+         
+                /> 
+              )
+              
            
           )
         }
